@@ -18,7 +18,7 @@ import my_matplotlib_style as ms
 from fastai import basic_data, basic_train
 from fastai import train as tr
 
-from my_nn_modules import get_data
+from nn_utils import get_data
 
 
 # Functions for evaluation
