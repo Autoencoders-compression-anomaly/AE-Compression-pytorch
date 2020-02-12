@@ -7,14 +7,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import pickle
-import datetime
 import my_matplotlib_style as ms
 from scipy import stats
 import utils
 
 import torch
 import torch.nn as nn
-# import torch.optim as optim
 import torch.utils.data
 
 from torch.utils.data import TensorDataset
@@ -31,16 +29,25 @@ from nn_utils import AE_basic, AE_bn_LeakyReLU
 
 mpl.rc_file(BIN + 'my_matplotlib_rcparams')
 
-# Load Bryan's data
-train = pd.read_pickle(BIN + 'processed_data/train.pkl')
-test = pd.read_pickle(BIN + 'processed_data/test.pkl')
+# Load data
+train = pd.read_pickle(BIN + 'processed_data/aod/all_jets_partial_train_10percent.pkl')
+test = pd.read_pickle(BIN + 'processed_data/aod/all_jets_partial_test_10percent.pkl')
+
+#Remove irrelevant columns
+train.pop('JetGhostArea')
+test.pop('JetGhostArea')
+train.pop('BchCorrCell')
+test.pop('BchCorrCell')
+
+# Remove extreme/bad jets
+train = utils.filter_jets(train)
+test = utils.filter_jets(test)
+
 # Normalize
 train_mean = train.mean()
 train_std = train.std()
 
-train = (train - train_mean) / train_std
-# Is this the right way to normalize? (only using train mean and std to normalize both train and test)
-test = (test - train_mean) / train_std
+train, test = utils.custom_normalization(train, test)
 
 train_x = train
 test_x = test
@@ -51,48 +58,42 @@ train_ds = TensorDataset(torch.tensor(train_x.values), torch.tensor(train_y.valu
 valid_ds = TensorDataset(torch.tensor(test_x.values), torch.tensor(test_y.values))
 train_dl, valid_dl = get_data(train_ds, valid_ds, bs=1024)
 db = basic_data.DataBunch(train_dl, valid_dl)
-# # Load AOD data
-# train = pd.read_pickle(BIN + 'processed_data/aod/scaled_all_jets_partial_train_10percent.pkl')  # Smaller dataset fits in memory on Kebnekaise
-# test = pd.read_pickle(BIN + 'processed_data/aod/scaled_all_jets_partial_test_10percent.pkl')
-#
-# bs = 1024
-# # Create TensorDatasets
-# train_ds = TensorDataset(torch.tensor(train.values, dtype=torch.float), torch.tensor(train.values, dtype=torch.float))
-# valid_ds = TensorDataset(torch.tensor(test.values, dtype=torch.float), torch.tensor(test.values, dtype=torch.float))
-# # Create DataLoaders
-# train_dl, valid_dl = get_data(train_ds, valid_ds, bs=bs)
-# # Return DataBunch
-# db = basic_data.DataBunch(train_dl, valid_dl)
 
-# module_name = 'AE_basic'
-# module = AE_basic
 module_name = 'AE_bn_LeakyReLU'
 module = AE_bn_LeakyReLU
-# nodes = [27, 400, 400, 200, 20, 200, 400, 400, 27]
-#grid_search_folder = module_name + '_lognormalized_grid_search/'
 grid_search_folder = "AE_bn_LeakyReLU_AOD_grid_search_custom_normalization_1500epochs/"
 
 loss_func = nn.MSELoss()
 
+#The folder to analyse
+model_folder_name = "AE_27_200_200_200_18_200_200_200_27"
+
 plt.close('all')
-for model_folder in os.scandir(grid_search_folder):
+
+#Just alter this if you want to iterate through every model
+for model_folder in [x for x in os.scandir(grid_search_folder) if x.name == model_folder_name]:
     if model_folder.is_dir():
         for train_folder in os.scandir(grid_search_folder + model_folder.name):
             if train_folder.is_dir() and train_folder.name == 'models':
                 plt.close('all')
-                #tmp = train_folder.name.split('bs')[1]
-                #param_string = 'bs' + tmp
-                #save_dict_fname = 'save_dict' + param_string + '.pkl'
-                #path_to_save_dict = grid_search_folder + model_folder.name + '/' + train_folder.name + '/' + save_dict_fname
-                #saved_model_fname = 'best_' + module_name + '_' + param_string.split('_pp')[0]
-                #path_to_saved_model = grid_search_folder + model_folder.name + '/' + 'models/' + saved_model_fname
-                #curr_save_folder = grid_search_folder + model_folder.name + '/' + train_folder.name + '/'
 
+                """
+                tmp = train_folder.name.split('bs')[1]
+                param_string = 'bs' + tmp
+                save_dict_fname = 'save_dict' + param_string + '.pkl'
+                path_to_save_dict = grid_search_folder + model_folder.name + '/' + train_folder.name + '/' + save_dict_fname
+                saved_model_fname = 'best_' + module_name + '_' + param_string.split('_pp')[0]
+                path_to_saved_model = grid_search_folder + model_folder.name + '/' + 'models/' + saved_model_fname
+                curr_save_folder = grid_search_folder + model_folder.name + '/' + train_folder.name + '/'
+                """
+
+                #Find the best model
                 for f in os.scandir(grid_search_folder + model_folder.name + '/' + train_folder.name + '/'):
                     if f.name[:4] == "best":
                         saved_model_fname = f.name[:-4]
-                        print(f.name[:-4])
+                        print(model_folder.name + " " + f.name[:-4])
 
+                """
                 #path_to_save_dict = grid_search_folder + model_folder.name + '/' + train_folder.name + 
 
                 #with open(path_to_save_dict, 'rb') as f:
@@ -113,7 +114,9 @@ for model_folder in os.scandir(grid_search_folder):
                 #plt.legend()
                 #plt.ylabel('MSE')
                 #plt.xlabel('Batches processed')
+                """
 
+                #Load model
                 nodes = model_folder.name.split('AE_')[1].split('_')
                 nodes = [int(x) for x in nodes]
                 model = module(nodes)
@@ -132,10 +135,9 @@ for model_folder in os.scandir(grid_search_folder):
                 markers = ['*', 's']
 
                 # Histograms
-                #idxs = (0, 100000)  # Choose events to compare
-                idxs = (0, 200)  # Choose events to compare
+                idxs = (0, 500000)  # Choose events to compare
                 data = torch.tensor(test_x[idxs[0]:idxs[1]].values)
-                pred = model(data).detach().numpy()
+                pred = model(data.float()).detach().numpy()
                 pred = np.multiply(pred, train_std.values)
                 pred = np.add(pred, train_mean.values)
                 data = np.multiply(data, train_std.values)
@@ -143,7 +145,7 @@ for model_folder in os.scandir(grid_search_folder):
 
                 alph = 0.8
                 n_bins = 50
-                for kk in np.arange(len(test.keys())):
+                for kk in np.arange(0,4):
                     plt.figure()
                     n_hist_data, bin_edges, _ = plt.hist(data[:, kk], color=colors[1], label='Input', alpha=1, bins=n_bins)
                     n_hist_pred, _, _ = plt.hist(pred[:, kk], color=colors[0], label='Output', alpha=alph, bins=bin_edges)
@@ -165,7 +167,7 @@ for model_folder in os.scandir(grid_search_folder):
                 residuals = (pred - data.detach().numpy()) / data.detach().numpy()
                 range = (-.1, .1)
                 #range=None
-                for kk in np.arange(len(test.keys())):
+                for kk in np.arange(0,4):
                     plt.figure()
                     n_hist_pred, bin_edges, _ = plt.hist(
                         residuals[:, kk], label='Residuals', linestyle=line_style[0], alpha=alph, bins=200, range=range)
