@@ -1,5 +1,5 @@
 # HEPAutoencoders
-Autoencoder compression of ATLAS jet events (seen as single-jets) using PyTorch and fastai.
+Autoencoder compression of ATLAS jet events using PyTorch and fastai.
 
 It strives to be easy to experiment with, but also parallelizable and GPU-friendly in order to aid hyperparameters scans on clusters.
 

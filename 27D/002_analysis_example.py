@@ -30,14 +30,14 @@ from nn_utils import AE_basic, AE_bn_LeakyReLU
 mpl.rc_file(BIN + 'my_matplotlib_rcparams')
 
 # Load data
-train = pd.read_pickle(BIN + 'processed_data/aod/all_jets_partial_train_10percent.pkl')
-test = pd.read_pickle(BIN + 'processed_data/aod/all_jets_partial_test_10percent.pkl')
+train = pd.read_pickle(BIN + 'processed_data/aod/all_jets_train_27D_5_percent.pkl')
+test = pd.read_pickle(BIN + 'processed_data/aod/all_jets_test_27D_5_percent.pkl')
 
 #Remove irrelevant columns
-train.pop('JetGhostArea')
-test.pop('JetGhostArea')
-train.pop('BchCorrCell')
-test.pop('BchCorrCell')
+#train.pop('JetGhostArea')
+#test.pop('JetGhostArea')
+#train.pop('BchCorrCell')
+#test.pop('BchCorrCell')
 
 # Remove extreme/bad jets
 train = utils.filter_jets(train)
@@ -135,8 +135,9 @@ for model_folder in [x for x in os.scandir(grid_search_folder) if x.name == mode
                 markers = ['*', 's']
 
                 # Histograms
-                idxs = (0, 500000)  # Choose events to compare
+                idxs = (0, 300000)  # Choose events to compare
                 data = torch.tensor(test_x[idxs[0]:idxs[1]].values)
+                #Note, float conversion
                 pred = model(data.float()).detach().numpy()
                 pred = np.multiply(pred, train_std.values)
                 pred = np.add(pred, train_mean.values)
