@@ -67,6 +67,9 @@ WIP, there will probably be some technical details of the normalization and trai
 ## Analysis
 fastai saves trained models in the folder models/ relative to the training script, with the .pth file extension. 
 
+## Saving to xAOD
+To save a 27-dim multi-dimensional array of decoded data back into a xAOD for analysis once again, the script ndarray_to_xAOD.py is available. (Soon for other dimensions as well)
+
 ## TODO:
 Major refactoring is being done. (75% done)
 
