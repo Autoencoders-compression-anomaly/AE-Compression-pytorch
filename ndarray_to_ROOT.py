@@ -1,7 +1,7 @@
 """
 This script saves a numpy ndarray (a detached torch tensor)
 of single jet events (i.e. not jagged arrays)
-back to a ROOT TFile xAOD, without ROOT or Athena.
+back to a ROOT TTree, without ROOT or Athena.
 
 TODO: Metadata?, compressiontypes
 """
