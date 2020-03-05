@@ -5,10 +5,50 @@ It strives to be easy to experiment with, but also parallelizable and GPU-friend
 
 Builds directly on the [code](https://github.com/erwulff/lth_thesis_project) of Eric Wulff. Technical explanations can be found in his [thesis](https://lup.lub.lu.se/student-papers/search/publication/9004751). 
 
+[Setup](#setup)
+
+[Quick guide](#quick-guide)
+
+[Data extraction](#data-extraction)
+
+[Training](#training)
+
+[Analysis](#analysis)
+
+[Saving back to ROOT](#saving-back-to-root)
+
+[TODO](#todo)
+
+## Setup:
+#### Running the container:
+Pull the docker container containing useful libraries:
+`docker pull atlasml/ml-base`
+
+Run an interactive bash shell in the container, allowing the hostmachine to open jupyter-notebooks running in the container. The port 8899 can be changed if it is already taken.
+`docker run -it -p 8899:8888 atlasml/ml-base`
+
+#### To install the project:
+
+From inside the container, pull the project from the git repository.
+```
+git init
+git pull https://github.com/Skelpdar/HEPAutoencoders
+```
+
+Alternatively, from the hostmachine, use `docker cp` to copy the project files and data into the container. (`docker cp` can be very useful to transfer data to or from the hostmachine.)
+
+Install dependencies (from inside the container):
+`pip3 install fastai`
+`pip3 install hwcounter`
+
+With jupyter-notebook running, one can access it on the hostmachine from the URL localhost:8899
+
 ## Quick guide
 Pre-processing:. Extract data from the ROOT DxAOD file-format in the scripts named process_*
 The data comes in two types: 4-dim data and the 27-dim data. Although the original events holds 29 values, only 27 of them are easy to work with.
+
 The ROOT-data should be stored in data/ (by default)
+
 All processed data will be placed in processed_data/ after extraction (by default). No normalization or other ML-related pre-processing is done in this step. 
 
 Training: An (uncommented) example of training a 4D-network is fastai_AE_3D_200_no1cycle.ipynb and looks very much like every other training script in this project.
@@ -19,6 +59,7 @@ For an example of analysing a 27-D network is 27D/27D_analysis.py
 The folders named 4D/, 25D/ and 27D/ simply holds training analysis scripts for that amount of dimensions. 
 
 nn_utils.py holds various heplful for networks structures and training functions.
+
 utils holds amongst many, functions for normalization and event filtering.
 
 ## Data extraction
