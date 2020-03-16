@@ -1,9 +1,11 @@
 # HEPAutoencoders
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
+
 ML-compression of ATLAS trigger jet events using autoencoders, with the PyTorch and fastai python libraries.
 
 It strives to be easy to experiment with, but also parallelizable and GPU-friendly in order to aid hyperparameters scans on clusters.
 
-Builds directly on the [code](https://github.com/erwulff/lth_thesis_project) of Eric Wulff. Technical explanations can be found in his [thesis](https://lup.lub.lu.se/student-papers/search/publication/9004751). 
+This repository is developed by Erik Wallin, as a bachelor project at Lund University. Builds directly on the master thesis [project](https://github.com/erwulff/lth_thesis_project) of Eric Wulff. Technical explanations can be found in his [thesis](https://lup.lub.lu.se/student-papers/search/publication/9004751). 
 
 [Setup](#setup)
 
