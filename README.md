@@ -1,5 +1,7 @@
 # HEPAutoencoders
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
+[![Gitter](https://badges.gitter.im/HEPAutoencoders/community.svg)](https://gitter.im/HEPAutoencoders/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+
 
 ML-compression of ATLAS trigger jet events using autoencoders, with the PyTorch and fastai python libraries.
 
