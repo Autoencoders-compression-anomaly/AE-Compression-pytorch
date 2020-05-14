@@ -15,3 +15,7 @@
 *.submit
 
 *root.1
+
+/venv*
+
+*egg-info*

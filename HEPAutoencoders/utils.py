@@ -14,11 +14,10 @@ from torch.utils.data import TensorDataset
 
 import my_matplotlib_style as ms
 
-
 from fastai import basic_data, basic_train
 from fastai import train as tr
 
-from nn_utils import get_data
+from HEPAutoencoders.nn_utils import get_data
 
 
 # Functions for evaluation
