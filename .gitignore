@@ -8,10 +8,10 @@
 
 *.err
 
+*.png
+
 *.out
 
 *.submit
-
-*.png
 
 *root.1
