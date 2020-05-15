@@ -4,4 +4,6 @@ pandas
 matplotlib
 fastai
 corner
-
+uproot
+sklearn
+mplhep

@@ -19,6 +19,7 @@ from fastai import train as tr
 
 from HEPAutoencoders.nn_utils import get_data
 
+from torch.utils.data import DataLoader
 
 # Functions for evaluation
 def count_parameters(model):
@@ -583,3 +584,9 @@ def round_to_input(pred, uniques, variable):
     for ii in np.arange(new_arr.shape[0]):
         new_arr[ii] = uniques[ind[ii]]
     pred[variable] = new_arr
+
+def get_data_loader(train_ds, valid_ds, bs):
+    return (
+        DataLoader(train_ds, batch_size=bs, shuffle=True),
+        DataLoader(valid_ds, batch_size=bs * 2),
+    )
