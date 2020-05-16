@@ -7,7 +7,7 @@ ML-compression of ATLAS trigger jet events using autoencoders, with the PyTorch 
 
 It strives to be easy to experiment with, but also parallelizable and GPU-friendly in order to aid hyperparameters scans on clusters.
 
-This repository is developed by Erik Wallin, as a bachelor project at Lund University. Builds directly on the master thesis [project](https://github.com/erwulff/lth_thesis_project) of Eric Wulff. Technical explanations can be found in his [thesis](https://lup.lub.lu.se/student-papers/search/publication/9004751). 
+This repository is developed by Erik Wallin, as a bachelor project at Lund University. Builds directly on the master thesis [project](https://github.com/erwulff/lth_thesis_project) of Eric Wulff. Technical explanations can be found in his [thesis](https://lup.lub.lu.se/student-papers/search/publication/9004751). Erik Wallin's thesis holds further details (link will be here soon).
 
 [Setup](#setup)
 
@@ -56,61 +56,21 @@ The ROOT-data should be stored in `data/` (by default)
 
 All processed data will be placed in `processed_data/` after extraction (by default). No normalization or other ML-related pre-processing is done in this step. 
 
-**Training:** An (uncommented) example of training a 4D-network is `fastai_AE_3D_200_no1cycle.ipynb` and looks very much like every other training script in this project. If the data you have looks any different it will need to be retrained. See the [report](https://lup.lub.lu.se/student-papers/search/publication/9004751) for previous searches of optimal network sizes. 
+**Training:** An (uncommented) example of training a 4D-network is `examples/4D/4D_training.ipynb` and looks very much like every other training script in this project. If the data you have looks any different it will need to be retrained. See Wulff's [report](https://lup.lub.lu.se/student-papers/search/publication/9004751) for previous searches of optimal network sizes. 
 
-**Analysis and plots:** An example of running a 4-dimensional already trained network is `4D/fastai_AE_3D_200_no1cycle_analysis.ipynb`
-For an example of analysing a 27-D network is `27D/27D_analysis.py`.
+**Analysis and plots:** An example of running a 4-dimensional already trained network is `examples/4D/TLA_analysis.ipynb`
+For an example of analysing a 27-D network is `examples/27D/27D_analysis.py`.
 
-**Code structure:** The folders named `4D/`, `25D/` and `27D/` simply holds training analysis scripts for that amount of dimensions. 
-
+**Code structure:** 
 `nn_utils.py` holds various heplful for networks structures and training functions.
 
 `utils.py` holds functions for normalization and event filtering, amongst others.
 
 ## Data extraction
-The raw DxAODs can be processed into a 4-dimensional dataset with `process_ROOT_4D.ipynb`, where the data is pickled into a 4D pandas Dataframe. `process_ROOT_27D.ipynb`  does the same for the 27-dimensional data.
-Since pickled python objects are very version incompatible, it is recommended to process the raw ROOT DxAODs instead of providing the pickled processed data. 
-
-For ease of use, put raw data in `data/` and put processed data in `processed_data/`
-
-The 27-variables in question are:
-
-|Value|
-|:---|
-HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.pt
-HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.eta
-HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.phi
-HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.m
-HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.ActiveArea
-HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.ActiveArea4vec_eta
-HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.ActiveArea4vec_m
-HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.ActiveArea4vec_phi
-HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.ActiveArea4vec_pt
-HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.AverageLArQF
-HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.NegativeE
-HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.HECQuality
-HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.LArQuality
-HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.Width
-HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.WidthPhi
-HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.CentroidR
-HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.DetectorEta
-HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.LeadingClusterCenterLambda
-HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.LeadingClusterPt
-HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.LeadingClusterSecondLambda
-HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.LeadingClusterSecondR
-HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.N90Constituents
-HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.EMFrac
-HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.HECFrac
-HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.Timing
-HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.OotFracClusters10
-HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.OotFracClusters5 
-
-These values are nice to work with since they are not lists of variable length, which suits our networks with constant input sizes. Worth noting is that ActiveArea and N90Constituents are discrete values.
-
-The pre-processing divides every jet as a single event. Further experiments with whole events might be interesting, i.e. a 8-dim or 54-dim AE for dijet events. 
+The raw DxAODs can be processed into a 4-dimensional dataset with `process_root()`, which returns pandas dataframes. These can be pickled for ease of use. Since pickled python objects are very version incompatible, it is recommended to process the raw ROOT xAODs instead of providing the pickled processed data. 
 
 ## Training
-ML details of the training process is in Wullf's [thesis](https://lup.lub.lu.se/student-papers/search/publication/9004751). Two well-functioning examples are `4D/fastai_AE_3D_200_no1cycle.ipynb` and `27D/27D_train.py`.
+ML details of the training process is in Wulff's [thesis](https://lup.lub.lu.se/student-papers/search/publication/9004751). A well-functioning example is examples/4D/4D_training.ipynb
 
 ## Analysis
 fastai saves trained models in the folder `models/` relative to the training script, with the .pth file extension. 
