@@ -32,20 +32,39 @@ Run an interactive bash shell in the container, allowing the hostmachine to open
 `docker run -it -p 8899:8888 atlasml/ml-base`
 
 #### To install the project:
-
-From inside the container, pull the project from the git repository.
+Create directories for the repo (and alternatively one for your virtualenv)
 ```
+mkdir HEPAutoencoders
+mkdir venv
+```
+(To enter the virtualenv:)
+```
+cd venv
+python3 -m venv .
+source bin/activate
+cd ..
+```
+
+Now, to fetch the latest version of the project:
+```
+cd HEPAutoencoders
 git init
 git pull https://github.com/Skelpdar/HEPAutoencoders
 ```
+Install dependencies:
+```
+pip3 -r requirements.txt
+```
+Lastly the HEPAutoencoders package can be installed (run from the directory that holds setup.py):
+```
+pip3 install .
+```
+Alternatively, if you want to easily edit and run the contents of the package without manually re-installing it, instead run:
+```
+pip3 install -e .
+```
 
-Alternatively, from the hostmachine, use `docker cp` to copy the project files and data into the container. (`docker cp` can be very useful to transfer data to or from the hostmachine.)
-
-Install dependencies (from inside the container):
-`pip3 install fastai`
-`pip3 install hwcounter`
-
-With jupyter-notebook running, one can access it on the hostmachine from the URL localhost:8899
+With a jupyter-notebook running inside the container, one can access it on the hostmachine from the URL localhost:8899
 
 ## Quick guide
 **Pre-processing:** Extract data from the ROOT DxAOD file-format in the scripts named `process_*`
