@@ -60,9 +60,6 @@ def ndarray_to_DxAOD(filename, array, branches=branches27D, compression=uproot.Z
     print(branchdict)
     
     f["CollectionTree"] = uproot.newtree(branchdict)
-    #for i,branch  in enumerate(branches):
-    #    data = array[:,i]
-    #    print(branch[0])
     f["CollectionTree"].extend(dict([(branch[0],array[:,i]) for (i,branch) in enumerate(branches)]))
     
 
