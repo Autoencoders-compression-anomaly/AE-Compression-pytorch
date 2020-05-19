@@ -1,8 +1,17 @@
 from setuptools import setup, find_packages
 
+with open("README.md", "r") as fh:
+	long_desc = fh.read()
+
 setup(name='HEPAutoencoders', 
-	version='1.0', 
+	version='0.1', 
 	description='Tools for training Autoencoders on high energy physics data',	
+	long_description=long_desc,
+	long_description_content_type="text/markdown",
+	url="https://github.com/Skelpdar/HEPAutoencoders",
 	author='Erik Wallin',
 	author_email='skelpdar@gmail.com',
-	packages=find_packages())
+	packages=find_packages(),
+	classifiers=["Programming Language :: Python :: 3.7", "License :: OSI Approved :: Apache Software License", "Operating System :: OS Independent"],
+	python_requires='>=3.6')
+
