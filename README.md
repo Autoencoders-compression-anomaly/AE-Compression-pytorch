@@ -55,7 +55,7 @@ Now, to fetch the latest version of the project:
 ```
 cd HEPAutoencoders
 git init
-git pull https://github.com/Skelpdar/HEPAutoencoders
+git pull https://github.com/Autoencoders-compression-anomaly/AE-Compression-pytorch.git
 ```
 Install dependencies:
 ```
