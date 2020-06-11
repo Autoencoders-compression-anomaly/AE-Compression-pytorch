@@ -247,5 +247,11 @@ def one_run(module, epochs, lr, wd, pp, ct):
         train_and_save(curr_model, epochs, lr, wd, pp, module_string, save_dict, ct, checkpoint_name)
         print('...done')
 
-
+tic = time.time()
 one_run(module=one_module, epochs=one_epochs, lr=one_lr, wd=one_wd, pp=one_pp, ct=continue_training)
+toc = time.time()
+
+time_taken = (toc-tic)/60.0
+
+print('Total time taken: ', time_taken , 'minutes')
+print('Time taken per epoch: ', time_taken / one_epochs, , 'minutes')
