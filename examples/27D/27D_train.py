@@ -47,7 +47,7 @@ save_dict = {}
 train = pd.read_pickle(BIN + 'datasets/processed_data/aod/scaled_all_jets_partial_test_10percent.pkl')
 test = pd.read_pickle(BIN + 'datasets/processed_data/aod/scaled_all_jets_partial_test_10percent.pkl')
 
-bs = 2048
+bs = 1024
 # Create TensorDatasets
 train_ds = TensorDataset(torch.tensor(train.values, dtype=torch.float), torch.tensor(train.values, dtype=torch.float))
 valid_ds = TensorDataset(torch.tensor(test.values, dtype=torch.float), torch.tensor(test.values, dtype=torch.float))
@@ -222,8 +222,8 @@ def train_and_save(model, epochs, lr, wd, pp, module_string, save_dict):
         f.write('%s Minimum validation loss: %e epoch: %d lr: %.1e wd: %.1e p: %s Training time: %s\n' % (module_string, min_val_loss, min_epoch, lr, wd, pp, time_string))
 
 
-one_epochs = 500
-one_lr = 1e-2
+one_epochs = 100
+one_lr = 1e-4
 one_wd = 1e-2
 one_pp = None
 one_module = AE_bn_LeakyReLU
