@@ -85,10 +85,13 @@ def get_unnormalized_reconstructions(model, df, train_mean, train_std, idxs=None
     return pred, data
 
 
-def train_model(model, epochs, lr, wd, module_string):
+def train_model(model, epochs, lr, wd, module_string, ct, path):
     plt.close('all')
     learn = basic_train.Learner(data=db, model=model, loss_func=loss_func, wd=wd, callback_fns=ActivationStats, bn_wd=bn_wd, true_wd=true_wd)
     start = time.perf_counter()
+    if ct:
+        learn.load(path)
+        print('Model loaded: ', path)
     learn.fit_one_cycle(epochs, max_lr=lr, wd=wd, callbacks=[SaveModelCallback(learn, every='improvement', monitor='valid_loss', name='best_%s_bs%s_lr%.0e_wd%.0e' % (module_string, bs, lr, wd))])
     end = time.perf_counter()
     delta_t = end - start
@@ -196,13 +199,13 @@ def save_plots(learn, module_string, lr, wd, pp):
     return curr_mod_folder
 
 
-def train_and_save(model, epochs, lr, wd, pp, module_string, save_dict):
+def train_and_save(model, epochs, lr, wd, pp, module_string, save_dict, ct, path):
     if pp is None:
         curr_param_string = 'bs%d_lr%.0e_wd%.0e_ppNA' % (bs, lr, wd)
     else:
         curr_param_string = 'bs%d_lr%.0e_wd%.0e_pp%.0e' % (bs, lr, wd, pp)
 
-    learn, delta_t = train_model(model, epochs=epochs, lr=lr, wd=wd, module_string=module_string)
+    learn, delta_t = train_model(model, epochs=epochs, lr=lr, wd=wd, module_string=module_string, ct=ct, path=path)
     time_string = str(datetime.timedelta(seconds=delta_t))
     curr_mod_folder = save_plots(learn, module_string, lr, wd, pp)
 
@@ -227,21 +230,22 @@ one_lr = 1e-4
 one_wd = 1e-2
 one_pp = None
 one_module = AE_bn_LeakyReLU
+continue_training = True
+checkpoint_name = 'nn_utils_bs1024_lr1e-04_wd1e-02_ppNA'
 
-
-def one_run(module, epochs, lr, wd, pp):
+def one_run(module, epochs, lr, wd, pp, ct):
     module_string = str(module).split("'")[1].split(".")[1]
     save_dict[module_string] = {}
     if pp is not None:
         print('Training %s with lr=%.1e, p=%.1e, wd=%.1e ...' % (module_string, lr, pp, wd))
         curr_model_p = module(dropout=pp)
-        train_and_save(curr_model_p, epochs, lr, wd, pp, module_string, save_dict)
+        train_and_save(curr_model_p, epochs, lr, wd, pp, module_string, save_dict, ct, checkpoint_name)
         print('...done')
     else:
         print('Training %s with lr=%.1e, p=None, wd=%.1e ...' % (module_string, lr, wd))
         curr_model = module([27, 200, 200, 200, 14, 200, 200, 200, 27])
-        train_and_save(curr_model, epochs, lr, wd, pp, module_string, save_dict)
+        train_and_save(curr_model, epochs, lr, wd, pp, module_string, save_dict, ct, checkpoint_name)
         print('...done')
 
 
-one_run(module=one_module, epochs=one_epochs, lr=one_lr, wd=one_wd, pp=one_pp)
+one_run(module=one_module, epochs=one_epochs, lr=one_lr, wd=one_wd, pp=one_pp, ct=continue_training)
