@@ -17,18 +17,19 @@ import torch.utils.data
 from torch.utils.data import TensorDataset
 from fastai.callbacks.tracker import SaveModelCallback
 
-import my_matplotlib_style as ms
+# import my_matplotlib_style as ms
+# from utils as ms
 
 from fastai import basic_train, basic_data
 from fastai.callbacks import ActivationStats
 from fastai import train as tr
 
-from my_nn_modules import AE_basic, AE_bn, AE_LeakyReLU, AE_bn_LeakyReLU, AE_big, AE_3D_50, AE_3D_50_bn_drop, AE_3D_50cone, AE_3D_100, AE_3D_100_bn_drop, AE_3D_100cone_bn_drop, AE_3D_200, AE_3D_200_bn_drop, AE_3D_500cone_bn, AE_3D_500cone_bn
-from my_nn_modules import get_data, RMSELoss
-from utils import plot_activations
+from HEPAutoencoders.nn_utils import AE_basic, AE_bn, AE_LeakyReLU, AE_bn_LeakyReLU, AE_big, AE_3D_50, AE_3D_50_bn_drop, AE_3D_50cone, AE_3D_100, AE_3D_100_bn_drop, AE_3D_100cone_bn_drop, AE_3D_200, AE_3D_200_bn_drop, AE_3D_500cone_bn, AE_3D_500cone_bn
+from HEPAutoencoders.nn_utils import get_data, RMSELoss
+from HEPAutoencoders.utils import plot_activations
 
 import matplotlib as mpl
-mpl.rc_file(BIN + 'my_matplotlib_rcparams')
+# mpl.rc_file(BIN + 'my_matplotlib_rcparams')
 
 print('torch.cuda.is_available(): ' + str(torch.cuda.is_available()))
 
@@ -43,8 +44,8 @@ save_dict = {}
 # test = pd.read_pickle(BIN + 'processed_data/aod/scaled_all_jets_partial_test.pkl')
 # train = pd.read_pickle(BIN + 'processed_data/aod/scaled_all_jets_partial_train_10percent.pkl')  # Smaller dataset fits in memory on Kebnekaise
 # test = pd.read_pickle(BIN + 'processed_data/aod/scaled_all_jets_partial_test_10percent.pkl')
-train = pd.read_pickle(BIN + 'processed_data/aod/custom_normalized_train_10percent.pkl')
-test = pd.read_pickle(BIN + 'processed_data/aod/custom_normalized_test_10percent.pkl')
+train = pd.read_pickle(BIN + 'datasets/processed_data/aod/scaled_all_jets_partial_test_10percent.pkl')
+test = pd.read_pickle(BIN + 'datasets/processed_data/aod/scaled_all_jets_partial_test_10percent.pkl')
 
 bs = 2048
 # Create TensorDatasets
@@ -110,7 +111,7 @@ def save_plots(learn, module_string, lr, wd, pp):
         os.mkdir(curr_save_folder)
 
     # Weight activation stats
-    plot_activations(learn, save=curr_save_folder + 'weight_activation')
+    # plot_activations(learn, save=curr_save_folder + 'weight_activation')
 
     # Plot losses
     batches = len(learn.recorder.losses)
@@ -221,7 +222,7 @@ def train_and_save(model, epochs, lr, wd, pp, module_string, save_dict):
         f.write('%s Minimum validation loss: %e epoch: %d lr: %.1e wd: %.1e p: %s Training time: %s\n' % (module_string, min_val_loss, min_epoch, lr, wd, pp, time_string))
 
 
-one_epochs = 1
+one_epochs = 500
 one_lr = 1e-2
 one_wd = 1e-2
 one_pp = None
