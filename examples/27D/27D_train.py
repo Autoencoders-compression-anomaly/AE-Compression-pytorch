@@ -1,5 +1,5 @@
 import sys
-BIN = '../../'
+BIN = '/afs/cern.ch/work/h/hgupta/public/AE-Compression-pytorch/'
 sys.path.append(BIN)
 import os.path
 import numpy as np
@@ -31,7 +31,11 @@ from HEPAutoencoders.utils import plot_activations
 import matplotlib as mpl
 # mpl.rc_file(BIN + 'my_matplotlib_rcparams')
 
-print('torch.cuda.is_available(): ' + str(torch.cuda.is_available()))
+# print('torch.cuda.is_available(): ' + str(torch.cuda.is_available()))
+
+if torch.cuda.is_available():
+    fastai.torch_core.defaults.device = 'cuda'
+    print('Using GPU for training')
 
 lr = 1e-3
 wds = 1e-5
@@ -44,10 +48,10 @@ save_dict = {}
 # test = pd.read_pickle(BIN + 'processed_data/aod/scaled_all_jets_partial_test.pkl')
 # train = pd.read_pickle(BIN + 'processed_data/aod/scaled_all_jets_partial_train_10percent.pkl')  # Smaller dataset fits in memory on Kebnekaise
 # test = pd.read_pickle(BIN + 'processed_data/aod/scaled_all_jets_partial_test_10percent.pkl')
-train = pd.read_pickle(BIN + 'datasets/processed_data/aod/scaled_all_jets_partial_test_10percent.pkl')
-test = pd.read_pickle(BIN + 'datasets/processed_data/aod/scaled_all_jets_partial_test_10percent.pkl')
+train = pd.read_pickle(BIN + 'datasets/processed_data/aod/scaled_all_jets_partial_train.pkl')
+test = pd.read_pickle(BIN + 'datasets/processed_data/aod/scaled_all_jets_partial_test.pkl')
 
-bs = 1024
+bs = 8192
 # Create TensorDatasets
 train_ds = TensorDataset(torch.tensor(train.values, dtype=torch.float), torch.tensor(train.values, dtype=torch.float))
 valid_ds = TensorDataset(torch.tensor(test.values, dtype=torch.float), torch.tensor(test.values, dtype=torch.float))
@@ -61,7 +65,6 @@ loss_func = nn.MSELoss()
 
 bn_wd = False  # Don't use weight decay for batchnorm layers
 true_wd = True  # wd will be used for all optimizers
-
 
 # Figures setup
 plt.close('all')
