@@ -1,5 +1,5 @@
 import sys
-BIN = '../../'
+BIN = '/afs/cern.ch/work/h/hgupta/public/AE-Compression-pytorch/'
 sys.path.append(BIN)
 import os.path
 import numpy as np
@@ -17,20 +17,25 @@ import torch.utils.data
 from torch.utils.data import TensorDataset
 from fastai.callbacks.tracker import SaveModelCallback
 
-import my_matplotlib_style as ms
+# import my_matplotlib_style as ms
+# from utils as ms
 
 from fastai import basic_train, basic_data
 from fastai.callbacks import ActivationStats
 from fastai import train as tr
 
-from my_nn_modules import AE_basic, AE_bn, AE_LeakyReLU, AE_bn_LeakyReLU, AE_big, AE_3D_50, AE_3D_50_bn_drop, AE_3D_50cone, AE_3D_100, AE_3D_100_bn_drop, AE_3D_100cone_bn_drop, AE_3D_200, AE_3D_200_bn_drop, AE_3D_500cone_bn, AE_3D_500cone_bn
-from my_nn_modules import get_data, RMSELoss
-from utils import plot_activations
+from HEPAutoencoders.nn_utils import AE_basic, AE_bn, AE_LeakyReLU, AE_bn_LeakyReLU, AE_big, AE_3D_50, AE_3D_50_bn_drop, AE_3D_50cone, AE_3D_100, AE_3D_100_bn_drop, AE_3D_100cone_bn_drop, AE_3D_200, AE_3D_200_bn_drop, AE_3D_500cone_bn, AE_3D_500cone_bn
+from HEPAutoencoders.nn_utils import get_data, RMSELoss
+from HEPAutoencoders.utils import plot_activations
 
 import matplotlib as mpl
-mpl.rc_file(BIN + 'my_matplotlib_rcparams')
+# mpl.rc_file(BIN + 'my_matplotlib_rcparams')
 
-print('torch.cuda.is_available(): ' + str(torch.cuda.is_available()))
+# print('torch.cuda.is_available(): ' + str(torch.cuda.is_available()))
+
+if torch.cuda.is_available():
+    fastai.torch_core.defaults.device = 'cuda'
+    print('Using GPU for training')
 
 lr = 1e-3
 wds = 1e-5
@@ -43,10 +48,10 @@ save_dict = {}
 # test = pd.read_pickle(BIN + 'processed_data/aod/scaled_all_jets_partial_test.pkl')
 # train = pd.read_pickle(BIN + 'processed_data/aod/scaled_all_jets_partial_train_10percent.pkl')  # Smaller dataset fits in memory on Kebnekaise
 # test = pd.read_pickle(BIN + 'processed_data/aod/scaled_all_jets_partial_test_10percent.pkl')
-train = pd.read_pickle(BIN + 'processed_data/aod/custom_normalized_train_10percent.pkl')
-test = pd.read_pickle(BIN + 'processed_data/aod/custom_normalized_test_10percent.pkl')
+train = pd.read_pickle(BIN + 'datasets/processed_data/aod/scaled_all_jets_partial_train.pkl')
+test = pd.read_pickle(BIN + 'datasets/processed_data/aod/scaled_all_jets_partial_test.pkl')
 
-bs = 2048
+bs = 8192
 # Create TensorDatasets
 train_ds = TensorDataset(torch.tensor(train.values, dtype=torch.float), torch.tensor(train.values, dtype=torch.float))
 valid_ds = TensorDataset(torch.tensor(test.values, dtype=torch.float), torch.tensor(test.values, dtype=torch.float))
@@ -60,7 +65,6 @@ loss_func = nn.MSELoss()
 
 bn_wd = False  # Don't use weight decay for batchnorm layers
 true_wd = True  # wd will be used for all optimizers
-
 
 # Figures setup
 plt.close('all')
@@ -84,10 +88,13 @@ def get_unnormalized_reconstructions(model, df, train_mean, train_std, idxs=None
     return pred, data
 
 
-def train_model(model, epochs, lr, wd, module_string):
+def train_model(model, epochs, lr, wd, module_string, ct, path):
     plt.close('all')
     learn = basic_train.Learner(data=db, model=model, loss_func=loss_func, wd=wd, callback_fns=ActivationStats, bn_wd=bn_wd, true_wd=true_wd)
     start = time.perf_counter()
+    if ct:
+        learn.load(path)
+        print('Model loaded: ', path)
     learn.fit_one_cycle(epochs, max_lr=lr, wd=wd, callbacks=[SaveModelCallback(learn, every='improvement', monitor='valid_loss', name='best_%s_bs%s_lr%.0e_wd%.0e' % (module_string, bs, lr, wd))])
     end = time.perf_counter()
     delta_t = end - start
@@ -110,7 +117,7 @@ def save_plots(learn, module_string, lr, wd, pp):
         os.mkdir(curr_save_folder)
 
     # Weight activation stats
-    plot_activations(learn, save=curr_save_folder + 'weight_activation')
+    # plot_activations(learn, save=curr_save_folder + 'weight_activation')
 
     # Plot losses
     batches = len(learn.recorder.losses)
@@ -195,13 +202,13 @@ def save_plots(learn, module_string, lr, wd, pp):
     return curr_mod_folder
 
 
-def train_and_save(model, epochs, lr, wd, pp, module_string, save_dict):
+def train_and_save(model, epochs, lr, wd, pp, module_string, save_dict, ct, path):
     if pp is None:
         curr_param_string = 'bs%d_lr%.0e_wd%.0e_ppNA' % (bs, lr, wd)
     else:
         curr_param_string = 'bs%d_lr%.0e_wd%.0e_pp%.0e' % (bs, lr, wd, pp)
 
-    learn, delta_t = train_model(model, epochs=epochs, lr=lr, wd=wd, module_string=module_string)
+    learn, delta_t = train_model(model, epochs=epochs, lr=lr, wd=wd, module_string=module_string, ct=ct, path=path)
     time_string = str(datetime.timedelta(seconds=delta_t))
     curr_mod_folder = save_plots(learn, module_string, lr, wd, pp)
 
@@ -221,26 +228,33 @@ def train_and_save(model, epochs, lr, wd, pp, module_string, save_dict):
         f.write('%s Minimum validation loss: %e epoch: %d lr: %.1e wd: %.1e p: %s Training time: %s\n' % (module_string, min_val_loss, min_epoch, lr, wd, pp, time_string))
 
 
-one_epochs = 1
-one_lr = 1e-2
+one_epochs = 100
+one_lr = 1e-4
 one_wd = 1e-2
 one_pp = None
 one_module = AE_bn_LeakyReLU
+continue_training = True
+checkpoint_name = 'nn_utils_bs1024_lr1e-04_wd1e-02_ppNA'
 
-
-def one_run(module, epochs, lr, wd, pp):
+def one_run(module, epochs, lr, wd, pp, ct):
     module_string = str(module).split("'")[1].split(".")[1]
     save_dict[module_string] = {}
     if pp is not None:
         print('Training %s with lr=%.1e, p=%.1e, wd=%.1e ...' % (module_string, lr, pp, wd))
         curr_model_p = module(dropout=pp)
-        train_and_save(curr_model_p, epochs, lr, wd, pp, module_string, save_dict)
+        train_and_save(curr_model_p, epochs, lr, wd, pp, module_string, save_dict, ct, checkpoint_name)
         print('...done')
     else:
         print('Training %s with lr=%.1e, p=None, wd=%.1e ...' % (module_string, lr, wd))
         curr_model = module([27, 200, 200, 200, 14, 200, 200, 200, 27])
-        train_and_save(curr_model, epochs, lr, wd, pp, module_string, save_dict)
+        train_and_save(curr_model, epochs, lr, wd, pp, module_string, save_dict, ct, checkpoint_name)
         print('...done')
 
+tic = time.time()
+one_run(module=one_module, epochs=one_epochs, lr=one_lr, wd=one_wd, pp=one_pp, ct=continue_training)
+toc = time.time()
 
-one_run(module=one_module, epochs=one_epochs, lr=one_lr, wd=one_wd, pp=one_pp)
+time_taken = (toc-tic)/60.0
+
+print('Total time taken: ', time_taken , 'minutes')
+print('Time taken per epoch: ', time_taken / one_epochs, , 'minutes')

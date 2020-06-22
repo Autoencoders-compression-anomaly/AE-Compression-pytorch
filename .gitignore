@@ -14,10 +14,16 @@
 
 *.out
 
-*.submit
+*/*.out
+
+*/*.err
+
+*/*.log
 
 *root.1
 
-/venv*
+/*venv*
 
 *egg-info*
+
+datasets/*

@@ -1,0 +1,10 @@
+executable              = scale.sh
+arguments               = $(ClusterId)$(ProcId)
+output                  = scale.out
+error                   = scale.err
+log                     = scale.$(ClusterId).log
+transfer_input_files    = scale_data.py 
+transfer_output_files   = *.pkl
+when_to_transfer_output = ON_EXIT
+request_CPUs = 2
+queue

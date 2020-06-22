@@ -1,0 +1,10 @@
+executable              = process.sh
+arguments               = $(ClusterId)$(ProcId)
+output                  = process.out
+error                   = process.err
+log                     = process.$(ClusterId).log
+transfer_input_files    = process_aod_all.py 
+transfer_output_files   = all_jets_partial_train.pkl, all_jets_partial_test.pkl
+when_to_transfer_output = ON_EXIT
+request_CPUs = 2
+queue
