@@ -19,7 +19,7 @@ from fastai.callbacks.tracker import SaveModelCallback
 
 # import my_matplotlib_style as ms
 # from utils as ms
-
+import fastai
 from fastai import basic_train, basic_data
 from fastai.callbacks import ActivationStats
 from fastai import train as tr
@@ -257,4 +257,4 @@ toc = time.time()
 time_taken = (toc-tic)/60.0
 
 print('Total time taken: ', time_taken , 'minutes')
-print('Time taken per epoch: ', time_taken / one_epochs, , 'minutes')
+print('Time taken per epoch: ', time_taken / one_epochs, 'minutes')

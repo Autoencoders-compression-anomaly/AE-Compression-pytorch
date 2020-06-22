@@ -52,6 +52,6 @@ scaled_test_data = fs.transform(test_data)
 scaled_train_df = pd.DataFrame(scaled_train_data, columns=train.columns)
 scaled_test_df = pd.DataFrame(scaled_test_data, columns=test.columns)
 
-scaled_train_df.to_pickle('scaled_all_jets_partial_train.pkl')
-scaled_test_df.to_pickle('scaled_all_jets_partial_test.pkl')
+scaled_train_df.to_pickle('/afs/cern.ch/work/h/hgupta/public/AE-Compression-pytorch/datasets/scaled_all_jets_partial_train.pkl')
+scaled_test_df.to_pickle('/afs/cern.ch/work/h/hgupta/public/AE-Compression-pytorch/datasets/scaled_all_jets_partial_test.pkl')
 

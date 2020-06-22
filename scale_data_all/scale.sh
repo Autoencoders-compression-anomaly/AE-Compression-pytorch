@@ -1,6 +1,3 @@
 #!/bin/bash
-python -m virtualenv myvenv
-source myvenv/bin/activate
-pip install pandas
-pip install FunctionScaler
+source /afs/cern.ch/work/h/hgupta/public/AE-Compression-pytorch/myvenv/bin/activate
 python scale_data.py
