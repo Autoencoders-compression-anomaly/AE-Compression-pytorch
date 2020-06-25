@@ -11,8 +11,8 @@ import pickle
 #import matplotlib as mpl
 # mpl.rc_file(BIN + 'my_matplotlib_rcparams')
 
-train = pd.read_pickle('/afs/cern.ch/work/h/hgupta/public/AE-Compression-pytorch/datasets/processed_data/aod/all_jets_partial_train.pkl')
-test = pd.read_pickle('/afs/cern.ch/work/h/hgupta/public/AE-Compression-pytorch/datasets/processed_data/aod/all_jets_partial_test.pkl')
+train = pd.read_pickle('/afs/cern.ch/work/h/hgupta/public/AE-Compression-pytorch/datasets/processed_data/aod/all_jets_partial_train_263.pkl')
+test = pd.read_pickle('/afs/cern.ch/work/h/hgupta/public/AE-Compression-pytorch/datasets/processed_data/aod/all_jets_partial_test_263.pkl')
 
 train['pt'] = train['pt'] / 1000.  # Convert to GeV
 test['pt'] = test['pt'] / 1000.  # Convert to GeV
@@ -52,6 +52,6 @@ scaled_test_data = fs.transform(test_data)
 scaled_train_df = pd.DataFrame(scaled_train_data, columns=train.columns)
 scaled_test_df = pd.DataFrame(scaled_test_data, columns=test.columns)
 
-scaled_train_df.to_pickle('/afs/cern.ch/work/h/hgupta/public/AE-Compression-pytorch/datasets/scaled_all_jets_partial_train.pkl')
-scaled_test_df.to_pickle('/afs/cern.ch/work/h/hgupta/public/AE-Compression-pytorch/datasets/scaled_all_jets_partial_test.pkl')
+scaled_train_df.to_pickle('/afs/cern.ch/work/h/hgupta/public/AE-Compression-pytorch/datasets/scaled_all_jets_partial_train_263.pkl')
+scaled_test_df.to_pickle('/afs/cern.ch/work/h/hgupta/public/AE-Compression-pytorch/datasets/scaled_all_jets_partial_test_263.pkl')
 

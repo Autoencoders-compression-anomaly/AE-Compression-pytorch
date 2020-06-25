@@ -233,7 +233,7 @@ one_lr = 1e-4
 one_wd = 1e-2
 one_pp = None
 one_module = AE_bn_LeakyReLU
-continue_training = True
+continue_training = False
 checkpoint_name = 'nn_utils_bs1024_lr1e-04_wd1e-02_ppNA'
 
 def one_run(module, epochs, lr, wd, pp, ct):
@@ -246,7 +246,7 @@ def one_run(module, epochs, lr, wd, pp, ct):
         print('...done')
     else:
         print('Training %s with lr=%.1e, p=None, wd=%.1e ...' % (module_string, lr, wd))
-        curr_model = module([27, 200, 200, 200, 14, 200, 200, 200, 27])
+        curr_model = module([27, 400, 400, 200, 20, 200, 400, 400, 27])
         train_and_save(curr_model, epochs, lr, wd, pp, module_string, save_dict, ct, checkpoint_name)
         print('...done')
 

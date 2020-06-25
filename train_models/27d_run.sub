@@ -5,5 +5,6 @@ error                   = 27d_run.$(ClusterId).$(ProcId).err
 log                     = 27d_run.$(ClusterId).log
 request_GPUs = 1
 request_CPUs = 4
++JobFlavour = "tomorrow"
 queue
 

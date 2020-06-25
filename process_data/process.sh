@@ -1,9 +1,5 @@
 #!/bin/bash
-python -m virtualenv -p python3 myvenv
+cd /afs/cern.ch/work/h/hgupta/public/AE-Compression-pytorch/
 source myvenv/bin/activate
-pip install pandas
-pip install fastai
-pip install corner
-pip install uproot
-pip install scikit-learn
+cd process_data/
 python process_aod_all.py

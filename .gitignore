@@ -8,17 +8,17 @@
 
 *.pdf
 
+*.pth
+
 *.err
 
 *.png
 
 *.out
 
-*/*.out
+*.err
 
-*/*.err
-
-*/*.log
+*.log
 
 *root.1
 

@@ -3,8 +3,5 @@ arguments               = $(ClusterId)$(ProcId)
 output                  = scale.out
 error                   = scale.err
 log                     = scale.$(ClusterId).log
-transfer_input_files    = scale_data.py 
-transfer_output_files   = /afs/cern.ch/work/h/hgupta/public/AE-Compression-pytorch/datasets/scaled_all_jets_partial_train.pkl, /afs/cern.ch/work/h/hgupta/public/AE-Compression-pytorch/datasets/scaled_all_jets_partial_test.pkl
-when_to_transfer_output = ON_EXIT
 request_CPUs = 2
 queue
