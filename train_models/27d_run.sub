@@ -3,10 +3,8 @@ arguments               = $(ClusterId)$(ProcId)
 output                  = 27d_run.$(ClusterId).$(ProcId).out
 error                   = 27d_run.$(ClusterId).$(ProcId).err
 log                     = 27d_run.$(ClusterId).log
-transfer_input_files    = ../examples/27D/27D_train.py
-transfer_output_files   = model/*
-when_to_transfer_output = ON_EXIT
 request_GPUs = 1
-request_CPUs = 1
+request_CPUs = 4
++JobFlavour = "tomorrow"
 queue
 

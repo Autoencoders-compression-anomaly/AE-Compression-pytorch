@@ -15,7 +15,7 @@ path_to_data = '/afs/cern.ch/work/h/hgupta/public/AE-Compression-pytorch/dataset
 
 # Load a ROOT file
 folder = 'data18_13TeV.00364292.calibration_DataScouting_05_Jets.deriv.DAOD_TRIG6.r10657_p3592_p3754/'
-fname = 'DAOD_TRIG6.16825104._000079.pool.root.1'
+fname = 'DAOD_TRIG6.16825104._000263.pool.root.1'
 filePath = path_to_data + folder + fname
 #ttree = uproot.open(filePath)['outTree']['nominal']
 tree = uproot.open(filePath)['CollectionTree']
@@ -142,7 +142,7 @@ print(partial_df.columns)
 
 partial_train, partial_test = train_test_split(partial_df, test_size=0.2, random_state=41)
 
-partial_train.to_pickle('all_jets_partial_train.pkl')
-partial_test.to_pickle('all_jets_partial_test.pkl')
+partial_train.to_pickle('/afs/cern.ch/work/h/hgupta/public/AE-Compression-pytorch/datasets/all_jets_partial_train_263.pkl')
+partial_test.to_pickle('/afs/cern.ch/work/h/hgupta/public/AE-Compression-pytorch/datasets/all_jets_partial_test_263.pkl')
 
 
