@@ -11,11 +11,11 @@ import torch.optim as optim
 from torch.utils.data import TensorDataset
 from torch.utils.data import DataLoader
 
-path_to_data = '/afs/cern.ch/work/h/hgupta/public/AE-Compression-pytorch/datasets/'
+path_to_data = '/afs/cern.ch/work/s/sarobert/autoencoders/inRootFiles/'
 
 # Load a ROOT file
 folder = 'data18_13TeV.00364292.calibration_DataScouting_05_Jets.deriv.DAOD_TRIG6.r10657_p3592_p3754/'
-fname = 'DAOD_TRIG6.16825104._000079.pool.root.1'
+fname = 'DAOD_TRIG6.16825104._000001.pool.root.1'
 filePath = path_to_data + folder + fname
 #ttree = uproot.open(filePath)['outTree']['nominal']
 tree = uproot.open(filePath)['CollectionTree']

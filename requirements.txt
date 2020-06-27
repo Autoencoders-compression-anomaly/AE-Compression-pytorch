@@ -7,3 +7,4 @@ corner
 uproot
 sklearn
 mplhep
+seaborn

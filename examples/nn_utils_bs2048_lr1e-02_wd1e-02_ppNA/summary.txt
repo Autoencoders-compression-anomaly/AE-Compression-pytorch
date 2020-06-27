@@ -1,0 +1,1 @@
+nn_utils Minimum validation loss: 5.982884e+08 epoch: 0 lr: 1.0e-02 wd: 1.0e-02 p: None Training time: 0:10:58.797285

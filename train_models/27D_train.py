@@ -257,7 +257,7 @@ def train_and_save(model, epochs, lr, wd, pp, module_string, save_dict, ct, path
 #one_epochs = 100
 #one_lr = 1e-4
 #=======
-one_epochs = 100
+one_epochs = 1
 one_lr = 1e-2
 #>>>>>>> adding plotting scripts
 one_wd = 1e-2
