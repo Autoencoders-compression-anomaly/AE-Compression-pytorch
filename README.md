@@ -24,7 +24,7 @@ This repository is developed by Erik Wallin, as a bachelor project at Lund Unive
 [TODO and ideas](#todo-and-ideas)
 
 ## Setup:
-#### Running the container:
+#### Running the container (not needed on lxplus):
 Pull the docker container containing useful libraries:
 `docker pull atlasml/ml-base`
 
@@ -61,6 +61,8 @@ Install dependencies:
 ```
 pip3 -r requirements.txt
 ```
+On lxplus, just use "pip". 
+
 Lastly the HEPAutoencoders package can be installed (run from the directory that holds setup.py):
 ```
 pip3 install .
