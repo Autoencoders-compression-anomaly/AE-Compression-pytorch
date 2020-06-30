@@ -14,9 +14,8 @@ req="requirements.txt" #My bash scripting isn't good enough to not make this a v
 modelDir="examples/27D/models/"
 pip3 install -r $pathToAE$req
 pip3 install $pathToAE
-pip3 install seaborn
 
-outdir="jun27100ep/" #Where all outputs are stored
+outdir="jun29-150ep/" #Where all outputs are stored
 savedir="/afs/cern.ch/user/s/sarobert/autoencoders/outputs/" #Where the output is moved to after completion
 mkdir $outdir
 
@@ -29,9 +28,5 @@ python3 27D_train.py
 #Move outputs
 mv models/ $outdir
 mv nn_utils* $outdir
-
-#python3 27D_analysis_corner.py
-#python3 27D_analysis_corrmatrix.py
-#mv *png $outdir
 
 mv $outdir $savedir

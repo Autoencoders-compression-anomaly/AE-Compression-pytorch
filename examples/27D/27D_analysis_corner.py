@@ -1,6 +1,6 @@
 import sys
 import os
-BIN = '../'
+BIN = '/afs/cern.ch/user/s/sarobert/autoencoders/AE-Compression-pytorch/'
 sys.path.append(BIN)
 from HEPAutoencoders.nn_utils import AE_basic, AE_bn_LeakyReLU
 from HEPAutoencoders.utils import plot_activations
@@ -29,23 +29,23 @@ import seaborn as sns
 
 #mpl.rc_file(BIN + 'my_matplotlib_rcparams')
 
-latent_dim = 18
+latent_dim = 14
 input_dim = 27
 
 # Load AOD data
 # Smaller dataset fits in memory on Kebnekaise
-train = pd.read_pickle('compressed_all_jets_364292_train.pkl')
-test = pd.read_pickle('compressed_all_jets_364292_test.pkl')
-
-#Normalization
-train, test = utils.custom_normalization(train, test)
+train = pd.read_pickle(BIN + 'process_data/all_jets_partial_train.pkl')
+test = pd.read_pickle(BIN + 'process_data/all_jets_partial_test.pkl')
 
 #Filter bad jets
 train = utils.filter_jets(train)
 test = utils.filter_jets(test)
 
-train = train[train['m'] > 1e-3]
-test = test[test['m'] > 1e-3]
+#Normalization
+train, test = utils.custom_normalization(train, test)
+
+#train = train[train['m'] > 1e-3]
+#test = test[test['m'] > 1e-3]
 
 if input_dim == 25:
     train.pop('Width')
@@ -53,7 +53,7 @@ if input_dim == 25:
     test.pop('Width')
     test.pop('WidthPhi')
 
-bs = 2048
+bs = 4096
 # Create TensorDatasets
 train_ds = TensorDataset(torch.tensor(train.values, dtype=torch.float),
                          torch.tensor(train.values, dtype=torch.float))
@@ -69,30 +69,32 @@ module = AE_bn_LeakyReLU
 
 #grid_search_folder = module_name + '_AOD_grid_search_custom_normalization_1500epochs/'
 #model_folder = 'AE_%d_200_200_200_%d_200_200_200_%d' % (input_dim, latent_dim, input_dim)
-grid_search_folder = ''
-model_folder = 'test1ep'
-train_folder = 'nn_utils_bs2048_lr1e-02_wd1e-02_ppNA'
+#grid_search_folder = ''
+#model_folder = 'test1ep'
+#train_folder = 'nn_utils_bs2048_lr1e-02_wd1e-02_ppNA'
 save = True
 
 loss_func = nn.MSELoss()
 
 
 plt.close('all')
-tmp = train_folder.split('bs')[1]
-param_string = 'bs' + tmp
-save_dict_fname = 'save_dict' + param_string + '.pkl'
-path_to_save_dict = grid_search_folder + model_folder + '/' + train_folder + '/' + save_dict_fname
-saved_model_fname = 'best_' + module_name + '_' + param_string.split('_pp')[0]
-path_to_saved_model = grid_search_folder + model_folder + '/' + 'models/' + saved_model_fname
-curr_save_folder = ''
+#tmp = train_folder.split('bs')[1]
+#param_string = 'bs' + tmp
+#save_dict_fname = 'save_dict' + param_string + '.pkl'
+#path_to_save_dict = grid_search_folder + model_folder + '/' + train_folder + '/' + save_dict_fname
+#saved_model_fname = 'best_' + module_name + '_' + param_string.split('_pp')[0]
+#path_to_saved_model = grid_search_folder + model_folder + '/' + 'models/' + saved_model_fname
+path_to_saved_model = '/afs/cern.ch/user/s/sarobert/autoencoders/outputs/jun27100ep/models/'
+modelFile = 'best_nn_utils_bs4096_lr1e-02_wd1e-02'
+curr_save_folder = BIN + 'examples/27D/'
 
-
-nodes = model_folder.split('AE_')[1].split('_')
-nodes = [int(x) for x in nodes]
+#nodes = model_folder.split('AE_')[1].split('_')
+#nodes = [int(x) for x in nodes]
+nodes = [27, 200, 200, 200, 14, 200, 200, 200, 27] #Hard coded for the time being
 model = module(nodes)
 learn = basic_train.Learner(data=db, model=model, loss_func=loss_func, true_wd=True, bn_wd=False,)
-learn.model_dir = grid_search_folder + model_folder + '/' + 'models/'
-learn.load(saved_model_fname)
+learn.model_dir = path_to_saved_model
+learn.load(modelFile)
 learn.model.eval()
 
 # Histograms
@@ -123,7 +125,7 @@ utils.round_to_input(unnormalized_pred_df, uniques, 'ActiveArea')
 data = unnormalized_data_df
 pred = unnormalized_pred_df
 
-residuals = (pred - data)  # / data
+residuals = (pred - data) / data
 # diff = (pred - data)
 
 diff_list = ['ActiveArea',
@@ -158,8 +160,8 @@ rel_diff_list = ['m',
                  #'eta',
                  'LeadingClusterPt']
 
-for var in rel_diff_list:
-    residuals[var] = residuals[var] / data[var]
+#for var in rel_diff_list:
+#    residuals[var] = residuals[var] / data[var]
 # res_df = pd.DataFrame(residuals, columns=test.columns)
 
 
@@ -254,7 +256,20 @@ for i_group, group in enumerate(corner_groups):
     group_arr = group_df.values
     qs = np.quantile(group_arr, q=[.0025, .9925], axis=0)
     ndim = qs.shape[1]
-    ranges = [tuple(qs[:, kk]) for kk in np.arange(ndim)]
+    if (i_group == 0):
+        ranges = [(-0.09871116682884362, 0.08086916175124935), (-0.4287975852936506, 0.25447835482657233), (-0.4813213293999434, 0.16533099643886573), (-.5, .5)]
+    if (i_group == 3):
+        ranges = [(-0.09871116682884362, 0.08086916175124935), (-0.4287975852936506, 0.25447835482657233), (-1, 1), (-1, 1)]
+    if (i_group == 4):
+        ranges = [(-0.09871116682884362, 0.08086916175124935), (-0.4287975852936506, 0.25447835482657233), (-0.4473390866829308, 0.33586700443955386), (-2, 1.0100613135335297), (-0.20000000298023224, 0.1111111119389534)]
+    if (i_group == 7):
+        ranges = [(-0.09871116682884362, 0.08086916175124935), (-0.4287975852936506, 0.25447835482657233), (-0.08020495220005382, 0.06399791303144527), (-.5, .5)]
+    if (i_group == 8):
+        ranges = [(-0.09871116682884362, 0.08086916175124935), (-0.4287975852936506, 0.25447835482657233), (-37.25050435066223, 11.922051482200635), (-1, 1), (-1, 1)]
+    if (i_group in [1,2,5,6]):
+        ranges = [tuple(qs[:, kk]) for kk in np.arange(ndim)]
+    print (i_group)
+    print (ranges)
     figure = corner(group_arr, range=ranges, plot_density=True, plot_contours=True, no_fill_contours=False, #range=[range for i in np.arange(ndim)],
                     bins=50, labels=group, label_kwargs=label_kwargs, #truths=[0 for kk in np.arange(qs.shape[1])],
                     show_titles=True, title_kwargs=title_kwargs, quantiles=(0.16, 0.84),
@@ -295,7 +310,7 @@ for i_group, group in enumerate(corner_groups):
         plt.subplots_adjust(left=0.13, bottom=0.20, right=.83)
     if save:
         fig_name = 'slide_corner_%d_group%d' % (latent_dim, i_group)
-        plt.savefig(curr_save_folder +'/' + fig_name)
+        plt.savefig(curr_save_folder + fig_name)
 
 #mpl.rc_file(BIN + 'my_matplotlib_rcparams')
 

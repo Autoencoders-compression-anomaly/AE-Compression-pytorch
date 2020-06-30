@@ -31,8 +31,9 @@ from fastai import train as tr
 from HEPAutoencoders.nn_utils import AE_basic, AE_bn, AE_LeakyReLU, AE_bn_LeakyReLU, AE_big, AE_3D_50, AE_3D_50_bn_drop, AE_3D_50cone, AE_3D_100, AE_3D_100_bn_drop, AE_3D_100cone_bn_drop, AE_3D_200, AE_3D_200_bn_drop, AE_3D_500cone_bn, AE_3D_500cone_bn
 from HEPAutoencoders.nn_utils import get_data, RMSELoss
 from HEPAutoencoders.utils import filter_jets, plot_activations, custom_normalization 
-
+import HEPAutoencoders.utils as utils
 import matplotlib as mpl
+import seaborn as sns
 #<<<<<<< HEAD
 # mpl.rc_file(BIN + 'my_matplotlib_rcparams')
 #=======
@@ -70,6 +71,9 @@ train = filter_jets(train)
 test = filter_jets(test)
 
 train, test = custom_normalization(train, test)
+
+train_mean = train.mean()
+train_std = train.std()
 
 bs = 4096 #Batch Size
 #>>>>>>> adding plotting scripts
@@ -175,24 +179,24 @@ def save_plots(learn, module_string, lr, wd, pp):
 
     # Uncomment this in order to plot histograms and residuals at the end of training
     # Histograms
-    # idxs = (0, 100000)  # Choose events to compare
-    # pred, data = get_unnormalized_reconstructions(learn.model, df=test_x, idxs=idxs, train_mean=train_mean, train_std=train_std)
-    # data = test[0:100000].values
-    # pred = learn.model(torch.tensor(data, dtype=torch.float))
+#    idxs = (0, 100000)  # Choose events to compare
+#    pred, data = get_unnormalized_reconstructions(learn.model, df=test, idxs=idxs, train_mean=train_mean, train_std=train_std)
+#    data = test[0:100000].values
+#    pred = learn.model(torch.tensor(data, dtype=torch.float))
     #
-    # alph = 0.8
-    # n_bins = 80
-    # for kk in np.arange(27):
-    #     plt.figure()
-    #     n_hist_data, bin_edges, _ = plt.hist(data[:, kk], color=colors[1], label='Input', alpha=1, bins=n_bins)
-    #     n_hist_pred, _, _ = plt.hist(pred[:, kk], color=colors[0], label='Output', alpha=alph, bins=bin_edges)
-    #     plt.suptitle(train.columns[kk])
-    #     # plt.xlabel(variable_list[kk] + ' ' + unit_list[kk])
-    #     plt.xlabel(train.columns[kk])
-    #     plt.ylabel('Number of events')
-    #     plt.yscale('log')
-    #     fig_name = 'hist_%s' % train.columns[kk]
-    #     plt.savefig(curr_save_folder + fig_name)
+#    alph = 0.8
+#    n_bins = 80
+#    for kk in np.arange(27):
+#        plt.figure()
+#        n_hist_data, bin_edges, _ = plt.hist(data[:, kk], color=colors[1], label='Input', alpha=1, bins=n_bins)
+#        n_hist_pred, _, _ = plt.hist(pred[:, kk], color=colors[0], label='Output', alpha=alph, bins=bin_edges)
+#        plt.suptitle(train.columns[kk])
+        # plt.xlabel(variable_list[kk] + ' ' + unit_list[kk])
+#        plt.xlabel(train.columns[kk])
+#        plt.ylabel('Number of events')
+#        plt.yscale('log')
+#        fig_name = 'hist_%s' % train.columns[kk]
+#        plt.savefig(curr_save_folder + fig_name)
 
     # # Plot input on top of output
     # idxs = (0, 100)  # Choose events to compare
@@ -223,6 +227,117 @@ def save_plots(learn, module_string, lr, wd, pp):
     #     plt.legend()
     #     fig_name = 'lowpt_hist_%s' % train_x.columns[kk]
     #     plt.savefig(curr_save_folder + fig_name)
+
+    #Make correlation matrix plot
+    plt.close('all')
+    unit_list = ['[GeV]', '[rad]', '[rad]', '[GeV]']
+    variable_list = [r'$p_T$', r'$\eta$', r'$\phi$', r'$E$']
+    line_style = ['--', '-']
+    colors = ['orange', 'c']
+    markers = ['*', 's']
+
+    idxs = (0, 100000)  # Pick events to compare
+    data = torch.tensor(test[idxs[0]:idxs[1]].values, dtype=torch.float, device=torch.device('cuda'))
+
+    pred = learn.model(data).cpu().detach().numpy()
+    data = data.cpu().detach().numpy()
+
+    data_df = pd.DataFrame(data, columns=test.columns)
+    pred_df = pd.DataFrame(pred, columns=test.columns)
+
+    # Unnormalize
+    unnormalized_data_df = utils.custom_unnormalize(data_df)
+    unnormalized_pred_df = utils.custom_unnormalize(pred_df)
+
+    # Handle variables with discrete distributions
+    unnormalized_pred_df['N90Constituents'] = unnormalized_pred_df['N90Constituents'].round()
+    uniques = unnormalized_data_df['ActiveArea'].unique()
+    utils.round_to_input(unnormalized_pred_df, uniques, 'ActiveArea')
+
+    data = unnormalized_data_df
+    pred = unnormalized_pred_df
+
+    residuals = (pred - data) / data
+# diff = (pred - data)
+
+    diff_list = ['ActiveArea',
+                 'ActiveArea4vec_phi',
+                 'ActiveArea4vec_eta',
+                 'ActiveArea4vec_pt',
+                 'ActiveArea4vec_m',
+                 'N90Constituents',
+                 'NegativeE',
+                 'OotFracClusters5',
+                 'OotFracClusters10',
+                 'Timing',
+                 'Width',
+                 'WidthPhi',
+                 'LeadingClusterCenterLambda',
+                 'LeadingClusterSecondLambda',
+                 'CentroidR',
+                 'LeadingClusterSecondR',
+                 'LArQuality',
+                 'HECQuality',
+                 'HECFrac',
+                 'EMFrac',
+                 'AverageLArQF',
+                 'phi',
+                 'eta',
+                 'DetectorEta',
+             ]
+    
+    res_df = pd.DataFrame(residuals, columns=test.columns)
+
+    lab_dict = {
+        'pt': '$(p_{T,out} - p_{T,in}) / p_{T,in}$',
+        'eta': '$\eta_{out} - \eta_{in}$ [rad]',
+        'phi': '$\phi_{out} - \phi_{in}$ [rad]',
+        'm': '$(m_{out} - m_{in}) / m_{in}$',
+        'ActiveArea': 'Difference in ActiveArea',
+        'ActiveArea4vec_eta': 'Difference in ActiveArea4vec_eta',
+        'ActiveArea4vec_m': 'Difference in ActiveArea4vec_m',
+        'ActiveArea4vec_phi': 'Difference in ActiveArea4vec_phi',
+        'ActiveArea4vec_pt': 'Difference in ActiveArea4vec_pt',
+        'AverageLArQF': 'Difference in AverageLArQF',
+        'NegativeE': 'Difference in NegativeE',
+        'HECQuality': 'Difference in HECQuality',
+        'LArQuality': 'Difference in LArQuality',
+        'Width': 'Difference in Width',
+        'WidthPhi': 'Difference in WidthPhi',
+        'CentroidR': 'Difference in CentroidR',
+        'DetectorEta': 'Difference in DetectorEta',
+        'LeadingClusterCenterLambda': 'Difference in LeadingClusterCenterLambda',
+        'LeadingClusterPt': 'Difference in LeadingClusterPt',
+        'LeadingClusterSecondLambda': 'Difference in LeadingClusterSecondLambda',
+        'LeadingClusterSecondR': 'Difference in LeadingClusterSecondR',
+        'N90Constituents': 'Difference in N90Constituents',
+        'EMFrac': 'Difference in EMFrac',
+        'HECFrac': 'Difference in HECFrac',
+        'Timing': 'Difference in Timing',
+        'OotFracClusters10': 'Difference in OotFracClusters10',
+        'OotFracClusters5': 'Difference in OotFracClusters5',
+    }
+
+
+    # Compute correlations
+    corr = res_df.corr()
+
+    # Generate a mask for the upper triangle
+    mask = np.zeros_like(corr, dtype=np.bool)
+    mask[np.triu_indices_from(mask)] = True
+
+    # Generate a custom diverging colormap
+    cmap = sns.diverging_palette(220, 10, as_cmap=True)
+    cmap = 'RdBu'
+    # Plot heatmap
+    mpl.rcParams['xtick.labelsize'] = 12
+    mpl.rcParams['ytick.labelsize'] = 12
+    sns.heatmap(corr, mask=mask, cmap=cmap, vmax=None, center=0,
+                square=True, linewidths=.5, cbar_kws={"shrink": .5})
+    plt.subplots_adjust(left=.23, bottom=.30, top=.99, right=.99)
+
+    fig_name = 'corr_16.png'
+    plt.savefig(curr_save_folder + fig_name)
 
     return curr_mod_folder
 
@@ -257,9 +372,8 @@ def train_and_save(model, epochs, lr, wd, pp, module_string, save_dict, ct, path
 #one_epochs = 100
 #one_lr = 1e-4
 #=======
-one_epochs = 100
+one_epochs = 150
 one_lr = 1e-2
-#>>>>>>> adding plotting scripts
 one_wd = 1e-2
 one_pp = None
 one_module = AE_bn_LeakyReLU

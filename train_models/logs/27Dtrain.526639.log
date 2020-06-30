@@ -1,0 +1,44 @@
+000 (526639.000.000) 06/29 20:30:47 Job submitted from host: <137.138.44.55:9618?addrs=137.138.44.55-9618+[2001-1458-d00-1a--48]-9618&alias=bigbird17.cern.ch&noUDP&sock=schedd_2910_98af_206>
+...
+040 (526639.000.000) 06/29 20:31:40 Started transferring input files
+	Transferring to host: <128.142.241.9:9618?addrs=128.142.241.9-9618+[2001-1458-301-ce--100-3de]-9618&alias=b7g47n0001.cern.ch&noUDP&sock=starter_3331_bda1_16595>
+...
+040 (526639.000.000) 06/29 20:31:40 Finished transferring input files
+...
+001 (526639.000.000) 06/29 20:31:41 Job executing on host: <128.142.241.9:9618?addrs=128.142.241.9-9618+[2001-1458-301-ce--100-3de]-9618&alias=b7g47n0001.cern.ch&noUDP&sock=startd_2397_b89a_3>
+...
+006 (526639.000.000) 06/29 20:31:44 Image size of job updated: 1780
+	2  -  MemoryUsage of job (MB)
+	1780  -  ResidentSetSize of job (KB)
+...
+006 (526639.000.000) 06/29 20:31:49 Image size of job updated: 1956
+	2  -  MemoryUsage of job (MB)
+	1956  -  ResidentSetSize of job (KB)
+...
+006 (526639.000.000) 06/29 20:36:50 Image size of job updated: 4838112
+	4490  -  MemoryUsage of job (MB)
+	4596888  -  ResidentSetSize of job (KB)
+...
+040 (526639.000.000) 06/29 23:01:53 Started transferring output files
+...
+040 (526639.000.000) 06/29 23:01:53 Finished transferring output files
+...
+005 (526639.000.000) 06/29 23:01:53 Job terminated.
+	(1) Normal termination (return value 0)
+		Usr 0 00:06:56, Sys 0 00:01:36  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+		Usr 0 00:06:56, Sys 0 00:01:36  -  Total Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Total Local Usage
+	4023  -  Run Bytes Sent By Job
+	15748  -  Run Bytes Received By Job
+	4023  -  Total Bytes Sent By Job
+	15748  -  Total Bytes Received By Job
+	Partitionable Resources :      Usage  Request Allocated Assigned
+	   Cpus                 :       0.00        1         1 
+	   Disk (KB)            : 1779673          50    203737 
+	   Gpus                 :                   1         1 "CUDA3"
+	   Memory (MB)          :    4490        2000      2000 
+...
+009 (526639.000.000) 06/29 23:01:53 Job was aborted by the user.
+	via condor_rm (by user sarobert)
+...

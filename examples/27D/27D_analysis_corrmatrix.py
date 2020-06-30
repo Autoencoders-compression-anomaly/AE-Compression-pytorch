@@ -1,10 +1,9 @@
 import sys
 import os
-BIN = '../'
+BIN = '/afs/cern.ch/user/s/sarobert/autoencoders/AE-Compression-pytorch/'
 sys.path.append(BIN)
-from nn_utils import AE_basic, AE_bn_LeakyReLU
-from utils import plot_activations
-from nn_utils import get_data, RMSELoss
+from HEPAutoencoders.nn_utils import AE_basic, AE_bn_LeakyReLU, get_data, RMSELoss
+from HEPAutoencoders.utils import plot_activations
 from fastai import train as tr
 from fastai.callbacks import ActivationStats
 from fastai import basic_train, basic_data
@@ -13,9 +12,9 @@ from torch.utils.data import TensorDataset
 import torch.utils.data
 import torch.nn as nn
 import torch
-import utils
+import HEPAutoencoders.utils as utils
 from scipy import stats
-import my_matplotlib_style as ms
+#import my_matplotlib_style as ms
 import datetime
 import pickle
 import matplotlib as mpl
@@ -29,24 +28,24 @@ import seaborn as sns
 # import torch.optim as optim
 
 
-mpl.rc_file(BIN + 'my_matplotlib_rcparams')
+#mpl.rc_file(BIN + 'my_matplotlib_rcparams')
 
 # Load AOD data
 # Smaller dataset fits in memory on Kebnekaise
-train = pd.read_pickle(BIN + 'processed_data/aod/all_jets_train_27D_5_percent.pkl')
-test = pd.read_pickle(BIN + 'processed_data/aod/all_jets_test_27D_5_percent.pkl')
-
-#Normalization
-train, test = utils.custom_normalization(train, test)
+train = pd.read_pickle(BIN + 'process_data/all_jets_partial_train.pkl')
+test = pd.read_pickle(BIN + 'process_data/all_jets_partial_test.pkl')
 
 #Filter bad jets
 train = utils.filter_jets(train)
 test = utils.filter_jets(test)
 
-train = train[train['m'] > 1e-3]
-test = test[test['m'] > 1e-3]
+#Normalization
+train, test = utils.custom_normalization(train, test)
 
-bs = 1024
+#train = train[train['m'] > 1e-3]
+#test = test[test['m'] > 1e-3]
+
+bs = 4096
 # Create TensorDatasets
 train_ds = TensorDataset(torch.tensor(train.values, dtype=torch.float),
                          torch.tensor(train.values, dtype=torch.float))
@@ -60,30 +59,32 @@ db = basic_data.DataBunch(train_dl, valid_dl)
 module_name = 'AE_bn_LeakyReLU'
 module = AE_bn_LeakyReLU
 
-grid_search_folder = module_name + '_AOD_grid_search_custom_normalization_1500epochs/'
-model_folder = 'AE_27_200_200_200_16_200_200_200_27'
-train_folder = 'AE_bn_LeakyReLU_bs4096_lr3e-02_wd1e-04_ppNA'
-save = False
+#grid_search_folder = module_name + '_AOD_grid_search_custom_normalization_1500epochs/'
+#model_folder = 'AE_27_200_200_200_16_200_200_200_27'
+#train_folder = 'AE_bn_LeakyReLU_bs4096_lr3e-02_wd1e-04_ppNA'
+save = True
 
 loss_func = nn.MSELoss()
 
 
 plt.close('all')
-tmp = train_folder.split('bs')[1]
-param_string = 'bs' + tmp
-save_dict_fname = 'save_dict' + param_string + '.pkl'
-path_to_save_dict = grid_search_folder + model_folder + '/' + train_folder + '/' + save_dict_fname
-saved_model_fname = 'best_' + module_name + '_' + param_string.split('_pp')[0]
-path_to_saved_model = grid_search_folder + model_folder + '/' + 'models/' + saved_model_fname
-curr_save_folder = grid_search_folder + model_folder + '/' + train_folder + '/'
+#tmp = train_folder.split('bs')[1]
+#param_string = 'bs' + tmp
+#save_dict_fname = 'save_dict' + param_string + '.pkl'
+#path_to_save_dict = grid_search_folder + model_folder + '/' + train_folder + '/' + save_dict_fname
+#saved_model_fname = 'best_' + module_name + '_' + param_string.split('_pp')[0]
+#path_to_saved_model = grid_search_folder + model_folder + '/' + 'models/' + saved_model_fname
+path_to_saved_model = '/afs/cern.ch/user/s/sarobert/autoencoders/outputs/jun27100ep/models/'
+modelFile = 'best_nn_utils_bs4096_lr1e-02_wd1e-02'
+curr_save_folder = BIN + 'examples/27D/'
 
-
-nodes = model_folder.split('AE_')[1].split('_')
-nodes = [int(x) for x in nodes]
+#nodes = model_folder.split('AE_')[1].split('_')
+#nodes = [int(x) for x in nodes]
+nodes = [27, 200, 200, 200, 14, 200, 200, 200, 27] #Hard coded for the time being
 model = module(nodes)
 learn = basic_train.Learner(data=db, model=model, loss_func=loss_func, true_wd=True, bn_wd=False,)
-learn.model_dir = grid_search_folder + model_folder + '/' + 'models/'
-learn.load(saved_model_fname)
+learn.model_dir = path_to_saved_model
+learn.load(modelFile)
 learn.model.eval()
 
 # Histograms
@@ -114,7 +115,7 @@ utils.round_to_input(unnormalized_pred_df, uniques, 'ActiveArea')
 data = unnormalized_data_df
 pred = unnormalized_pred_df
 
-residuals = (pred - data)  # / data
+residuals = (pred - data) / data
 # diff = (pred - data)
 
 diff_list = ['ActiveArea',
@@ -199,7 +200,7 @@ mpl.rcParams['ytick.labelsize'] = 12
 sns.heatmap(corr, mask=mask, cmap=cmap, vmax=None, center=0,
             square=True, linewidths=.5, cbar_kws={"shrink": .5})
 plt.subplots_adjust(left=.23, bottom=.30, top=.99, right=.99)
-mpl.rc_file(BIN + 'my_matplotlib_rcparams')
+#mpl.rc_file(BIN + 'my_matplotlib_rcparams')
 if save:
     fig_name = 'corr_16.png'
     plt.savefig(curr_save_folder + fig_name)
