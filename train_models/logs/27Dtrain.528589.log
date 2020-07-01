@@ -1,0 +1,45 @@
+000 (528589.000.000) 06/30 15:11:31 Job submitted from host: <137.138.44.55:9618?addrs=137.138.44.55-9618+[2001-1458-d00-1a--48]-9618&alias=bigbird17.cern.ch&noUDP&sock=schedd_2910_98af_206>
+...
+040 (528589.000.000) 06/30 15:12:34 Started transferring input files
+	Transferring to host: <128.142.241.105:9618?addrs=128.142.241.105-9618+[2001-1458-301-ce--100-43]-9618&alias=b7g47n0004.cern.ch&noUDP&sock=starter_32713_048b_9278>
+...
+040 (528589.000.000) 06/30 15:12:34 Finished transferring input files
+...
+001 (528589.000.000) 06/30 15:12:35 Job executing on host: <128.142.241.105:9618?addrs=128.142.241.105-9618+[2001-1458-301-ce--100-43]-9618&alias=b7g47n0004.cern.ch&noUDP&sock=startd_32674_398a_3>
+...
+006 (528589.000.000) 06/30 15:12:43 Image size of job updated: 25636
+	25  -  MemoryUsage of job (MB)
+	25508  -  ResidentSetSize of job (KB)
+...
+006 (528589.000.000) 06/30 15:22:44 Image size of job updated: 2167632
+	2056  -  MemoryUsage of job (MB)
+	2104352  -  ResidentSetSize of job (KB)
+...
+006 (528589.000.000) 06/30 15:27:45 Image size of job updated: 4838048
+	4352  -  MemoryUsage of job (MB)
+	4456312  -  ResidentSetSize of job (KB)
+...
+006 (528589.000.000) 06/30 15:41:26 Image size of job updated: 5363364
+	4352  -  MemoryUsage of job (MB)
+	4456312  -  ResidentSetSize of job (KB)
+...
+040 (528589.000.000) 06/30 15:41:26 Started transferring output files
+...
+040 (528589.000.000) 06/30 15:41:26 Finished transferring output files
+...
+005 (528589.000.000) 06/30 15:41:26 Job terminated.
+	(1) Normal termination (return value 0)
+		Usr 0 00:13:46, Sys 0 00:02:50  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+		Usr 0 00:13:46, Sys 0 00:02:50  -  Total Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Total Local Usage
+	22484  -  Run Bytes Sent By Job
+	20964  -  Run Bytes Received By Job
+	22484  -  Total Bytes Sent By Job
+	20964  -  Total Bytes Received By Job
+	Partitionable Resources :      Usage  Request Allocated Assigned
+	   Cpus                 :       1.00        1         1 
+	   Disk (KB)            : 1796679          75      5550 
+	   Gpus                 :                   1         1 "CUDA0"
+	   Memory (MB)          :    4352        2000      2000 
+...

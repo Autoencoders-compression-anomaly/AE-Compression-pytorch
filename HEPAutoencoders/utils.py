@@ -406,6 +406,12 @@ def filter_jets(train):
 
     return train
 
+def min_filter_jets(train): #To allow normalization to be applied with minimum filtering
+    train['LeadingClusterPt'] = train['LeadingClusterPt'] / 1000.  # Convert to GeV
+    train = train[train['OotFracClusters10'] > -0.1]
+    train = train[train['OotFracClusters5'] > -0.1]
+    train = train[train['LeadingClusterPt'] > 0]
+    return train
 
 def unit_convert_jets(leading, subleading):
     leading_orig = leading.copy()

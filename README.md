@@ -59,7 +59,7 @@ git pull https://github.com/Autoencoders-compression-anomaly/AE-Compression-pyto
 ```
 Install dependencies:
 ```
-pip3 -r requirements.txt
+pip3 install -r requirements.txt
 ```
 Lastly the HEPAutoencoders package can be installed (run from the directory that holds setup.py):
 ```
