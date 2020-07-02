@@ -49,8 +49,8 @@ train = pd.read_pickle(BIN + 'process_data/all_jets_partial_train.pkl')
 test = pd.read_pickle(BIN + 'process_data/all_jets_partial_test.pkl')
 
 #Filter and normalize data
-train = filter_jets(train)
-test = filter_jets(test)
+train = min_filter_jets(train)
+test = min_filter_jets(test)
 
 train, test = custom_normalization(train, test)
 #train, test = normalize(train, test)
@@ -78,7 +78,7 @@ plt.close('all')
 unit_list = ['[GeV]', '[rad]', '[rad]', '[GeV]']
 variable_list = [r'$p_T$', r'$\eta$', r'$\phi$', r'$E$']
 line_style = ['--', '-']
-colors = ['red', 'c']
+colors = ['orange', 'c']
 markers = ['*', 's']
 
 
@@ -186,36 +186,20 @@ def save_plots(learn, module_string, lr, wd, pp):
     data = data.to_numpy() #convert to numpy to feed into pyplot
     pred = pred.to_numpy()
     for kk in np.arange(27):
-        plt.close('all')
         plt.figure()
         n_hist_data, bin_edges, _ = plt.hist(data[:, kk], color=colors[1], label='Input', alpha=1, bins=n_bins)
         n_hist_pred, _, _ = plt.hist(pred[:, kk], color=colors[0], label='Output', alpha=alph, bins=bin_edges)
         plt.suptitle(labels[kk])
-        plot.legend(loc="upper right")
         # plt.xlabel(variable_list[kk] + ' ' + unit_list[kk])
+        plt.legend(loc="upper right")
         plt.xlabel(labels[kk])
         plt.ylabel('Number of events')
         plt.yscale('log')
         fig_name = 'hist_%s' % train.columns[kk]
         plt.savefig(curr_save_folder + fig_name)
-
-    # # Plot input on top of output
-    # idxs = (0, 100)  # Choose events to compare
-    # pred, data = get_unnormalized_reconstructions(learn.model, df=test_x, idxs=idxs, train_mean=train_mean, train_std=train_std)
-    #
-    # for kk in np.arange(4):
-    #     plt.figure()
-    #     plt.plot(data[:, kk], color=colors[1], label='Input', linestyle=line_style[1], marker=markers[1])
-    #     plt.plot(pred[:, kk], color=colors[0], label='Output', linestyle=line_style[0], marker=markers[0])
-    #     plt.suptitle(train.columns[kk])
-    #     plt.xlabel('Event')
-    #     plt.ylabel(variable_list[kk] + ' ' + unit_list[kk])
-    #     plt.legend()
-    #     ms.sciy()
-    #     fig_name = 'plot_%s' % train_x.columns[kk]
-    #     plt.savefig(curr_save_folder + fig_name)
-
-    #Make correlation matrix plot
+        plt.close('all')
+    
+    plt.close('all')
 
 # diff = (pred - data)
 
@@ -309,9 +293,9 @@ def save_plots(learn, module_string, lr, wd, pp):
     fig_name = 'corr_16.png'
     plt.savefig(curr_save_folder + fig_name)
 
+    plt.close('all')
     #Make Correlation corner plots
     for i_group, group in enumerate(corner_groups):
-        plt.close('all')
         group_df = residuals[group]
         #plt.figure()
         # Compute correlations
@@ -337,7 +321,7 @@ def save_plots(learn, module_string, lr, wd, pp):
         #     fig_name = 'corr_%d_group%d.png' % (latent_dim, i_group)
         #     plt.savefig(curr_save_folder + fig_name)
 
-        label_kwargs = {'fontsize': 12, 'rotation': -85, 'ha': 'right'}
+        label_kwargs = {'fontsize': 12, 'rotation': -45, 'ha': 'right'}
         title_kwargs = {"fontsize": 9}
         mpl.rcParams['lines.linewidth'] = 1
         mpl.rcParams['xtick.labelsize'] = 12
@@ -385,8 +369,8 @@ def save_plots(learn, module_string, lr, wd, pp):
                 # Set face color according to correlation
                 ax.set_facecolor(color=mappable.to_rgba(corr.values[yi, xi]))
         cax = figure.add_axes([.87, .4, .04, 0.55])
-        #cbar = plt.colorbar(mappable, cax=cax, format='%.1f', ticks=np.arange(-1., 1.1, 0.2))
-        #cbar.ax.set_ylabel('Correlation', fontsize=20)
+        cbar = plt.colorbar(mappable, cax=cax, format='%.1f', ticks=np.arange(-1., 1.1, 0.2))
+        cbar.ax.set_ylabel('Correlation', fontsize=20)
 
         if i_group == 6:
             plt.subplots_adjust(left=0.13, bottom=0.21, right=.82)
@@ -470,7 +454,7 @@ def train_and_save(model, epochs, lr, wd, pp, module_string, save_dict, ct, path
 #one_epochs = 100
 #one_lr = 1e-4
 #=======
-one_epochs = 100
+one_epochs = 1
 one_lr = 1e-2
 one_wd = 1e-2
 one_pp = None
