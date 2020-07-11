@@ -37,33 +37,45 @@ docker ps
 docker attach <name>
 ```
 
-#### To install the project:
-Create directories for the repo (and alternatively one for your virtualenv)
+#### Running using virtual envonment (recommended for lxplus):
+
+Fetch the latest version of the project:
 ```
-mkdir HEPAutoencoders
+git clone https://github.com/Autoencoders-compression-anomaly/AE-Compression-pytorch.git
+cd AE-Compression-pytorch
+```
+
+##### Predefined installation (Simpler):
+```
+chmod +x install_libs.sh
+./install_libs.sh
+
+```
+
+##### Manual installation
+
+Create directory for your virtualenv
+```
 mkdir venv
 ```
 (To enter the virtualenv:)
 ```
 cd venv
-python3 -m venv .
+python -m virtualenv -p python3 venv
 source bin/activate
 cd ..
 ```
 
-Now, to fetch the latest version of the project:
-```
-cd HEPAutoencoders
-git init
-git pull https://github.com/Autoencoders-compression-anomaly/AE-Compression-pytorch.git
-```
+Now, to 
 Install dependencies:
 ```
 pip3 -r requirements.txt
 ```
 On lxplus, just use "pip". 
 
-Lastly the HEPAutoencoders package can be installed (run from the directory that holds setup.py):
+##### Install the package
+
+Lastly the AE-Compression-pytorch package can be installed (run from the directory that holds setup.py):
 ```
 pip3 install .
 ```
