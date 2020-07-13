@@ -49,10 +49,13 @@ train = pd.read_pickle(BIN + 'process_data/all_jets_partial_train.pkl')
 test = pd.read_pickle(BIN + 'process_data/all_jets_partial_test.pkl')
 
 #Filter and normalize data
-train = filter_jets(train)
-test = filter_jets(test)
+#train = filter_jets(train)
+#test = filter_jets(test)
 
-train, test = custom_normalization(train, test)
+train = min_filter_jets(train)
+test = min_filter_jets(test)
+
+#train, test = custom_normalization(train, test)
 #train, test = normalize(train, test)
 
 train_mean = train.mean()
@@ -167,16 +170,18 @@ def save_plots(learn, module_string, lr, wd, pp):
     pred_df = pd.DataFrame(pred, columns=test.columns)
 
     # Unnormalize
-    unnormalized_data_df = custom_unnormalize(data_df)
-    unnormalized_pred_df = custom_unnormalize(pred_df)
+    #unnormalized_data_df = custom_unnormalize(data_df)
+    #unnormalized_pred_df = custom_unnormalize(pred_df)
 
     # Handle variables with discrete distributions
     unnormalized_pred_df['N90Constituents'] = unnormalized_pred_df['N90Constituents'].round()
     uniques = unnormalized_data_df['ActiveArea'].unique()
     utils.round_to_input(unnormalized_pred_df, uniques, 'ActiveArea')
 
-    data = unnormalized_data_df
-    pred = unnormalized_pred_df
+    #data = unnormalized_data_df
+    #pred = unnormalized_pred_df
+    data = data_df
+    pred = pred_df
     residuals = (pred - data) / data
 
     idxs = (0, 100000)  # Choose events to compare
@@ -191,7 +196,7 @@ def save_plots(learn, module_string, lr, wd, pp):
         n_hist_data, bin_edges, _ = plt.hist(data[:, kk], color=colors[1], label='Input', alpha=1, bins=n_bins)
         n_hist_pred, _, _ = plt.hist(pred[:, kk], color=colors[0], label='Output', alpha=alph, bins=bin_edges)
         plt.suptitle(labels[kk])
-        plot.legend(loc="upper right")
+        plt.legend(loc="upper right")
         # plt.xlabel(variable_list[kk] + ' ' + unit_list[kk])
         plt.xlabel(labels[kk])
         plt.ylabel('Number of events')
@@ -199,25 +204,9 @@ def save_plots(learn, module_string, lr, wd, pp):
         fig_name = 'hist_%s' % train.columns[kk]
         plt.savefig(curr_save_folder + fig_name)
 
-    # # Plot input on top of output
-    # idxs = (0, 100)  # Choose events to compare
-    # pred, data = get_unnormalized_reconstructions(learn.model, df=test_x, idxs=idxs, train_mean=train_mean, train_std=train_std)
-    #
-    # for kk in np.arange(4):
-    #     plt.figure()
-    #     plt.plot(data[:, kk], color=colors[1], label='Input', linestyle=line_style[1], marker=markers[1])
-    #     plt.plot(pred[:, kk], color=colors[0], label='Output', linestyle=line_style[0], marker=markers[0])
-    #     plt.suptitle(train.columns[kk])
-    #     plt.xlabel('Event')
-    #     plt.ylabel(variable_list[kk] + ' ' + unit_list[kk])
-    #     plt.legend()
-    #     ms.sciy()
-    #     fig_name = 'plot_%s' % train_x.columns[kk]
-    #     plt.savefig(curr_save_folder + fig_name)
-
     #Make correlation matrix plot
 
-# diff = (pred - data)
+    # diff = (pred - data)
 
     diff_list = ['ActiveArea',
                  'ActiveArea4vec_phi',
@@ -288,7 +277,8 @@ def save_plots(learn, module_string, lr, wd, pp):
         ['pt', 'eta', 'EMFrac', 'HECFrac'],
         ['pt', 'eta', 'Timing', 'OotFracClusters5', 'OotFracClusters10'],
     ]
-
+    
+    plt.close('all')
     # Compute correlations
     corr = res_df.corr()
 
@@ -300,8 +290,8 @@ def save_plots(learn, module_string, lr, wd, pp):
     cmap = sns.diverging_palette(220, 10, as_cmap=True)
     cmap = 'RdBu'
     # Plot heatmap
-    mpl.rcParams['xtick.labelsize'] = 12
-    mpl.rcParams['ytick.labelsize'] = 12
+    mpl.rcParams['xtick.labelsize'] = 8
+    mpl.rcParams['ytick.labelsize'] = 8
     sns.heatmap(corr, mask=mask, cmap=cmap, vmax=None, center=0,
                 square=True, linewidths=.5, cbar_kws={"shrink": .5})
     plt.subplots_adjust(left=.23, bottom=.30, top=.99, right=.99)
@@ -337,7 +327,7 @@ def save_plots(learn, module_string, lr, wd, pp):
         #     fig_name = 'corr_%d_group%d.png' % (latent_dim, i_group)
         #     plt.savefig(curr_save_folder + fig_name)
 
-        label_kwargs = {'fontsize': 12, 'rotation': -85, 'ha': 'right'}
+        label_kwargs = {'fontsize': 12, 'rotation': -60, 'ha': 'right'}
         title_kwargs = {"fontsize": 9}
         mpl.rcParams['lines.linewidth'] = 1
         mpl.rcParams['xtick.labelsize'] = 12
@@ -385,8 +375,8 @@ def save_plots(learn, module_string, lr, wd, pp):
                 # Set face color according to correlation
                 ax.set_facecolor(color=mappable.to_rgba(corr.values[yi, xi]))
         cax = figure.add_axes([.87, .4, .04, 0.55])
-        #cbar = plt.colorbar(mappable, cax=cax, format='%.1f', ticks=np.arange(-1., 1.1, 0.2))
-        #cbar.ax.set_ylabel('Correlation', fontsize=20)
+        cbar = plt.colorbar(mappable, cax=cax, format='%.1f', ticks=np.arange(-1., 1.1, 0.2))
+        cbar.ax.set_ylabel('Correlation', fontsize=20)
 
         if i_group == 6:
             plt.subplots_adjust(left=0.13, bottom=0.21, right=.82)

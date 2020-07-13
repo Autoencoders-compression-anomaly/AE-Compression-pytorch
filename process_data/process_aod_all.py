@@ -23,7 +23,7 @@ tree = uproot.open(filePath)['CollectionTree']
 print(tree.keys())
 
 n_jets = sum(tree.array('HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.pt').counts)
-print(n_jets)
+print('number of jets: ' + str(n_jets))
 
 branchnames = [
     # 4-momentum
@@ -65,12 +65,12 @@ branchnames = [
     'HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.OotFracClusters5',
 ]
 
-print(len(branchnames))
+print('number of branches: ' + str(len(branchnames)))
 
 EnergyPerSampling = tree.array(branchnames[4])
 n_events = len(EnergyPerSampling)
 counts = EnergyPerSampling.counts
-print(n_events)
+print('number of events: ' + str(n_events))
 
 prefix = 'HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn'
 #prefix = 'HLT_xAOD__JetContainer_a4tcemsubjesISFSAuxDyn'
@@ -114,7 +114,7 @@ branchnames = [
     prefix + '.OotFracClusters5',
 ]
 
-print(len(branchnames))
+print('number of branches rd2: ' + str(len(branchnames)))
 
 df_dict = {}
 for pp, branchname in enumerate(branchnames):

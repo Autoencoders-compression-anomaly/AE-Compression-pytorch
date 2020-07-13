@@ -1,0 +1,9 @@
+executable              = processTLA.sh
+arguments               = $(ClusterId)$(ProcId)
+output                  = processTLA.out
+error                   = processTLA.err
+log                     = processTLA.$(ClusterId).log
+transfer_input_files    = processTLA.py 
+request_CPUs = 1
++JobFlavour  = "workday"
+queue

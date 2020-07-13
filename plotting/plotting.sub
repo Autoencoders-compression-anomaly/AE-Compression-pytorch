@@ -1,0 +1,11 @@
+universe	= vanilla
+executable	= plotting.sh
+arguments	= $(ClusterId)$(ProcId)
+output 		= plotting.$(ClusterId).$(ProcId).out
+error 		= plotting.$(ClusterId).$(ProcId).err
+log 		= plotting.$(ClusterId).log
++JobFlavour	= "workday"
+transfer_input_files	= correlationPlots.py 
+request_cpus	= 1
+
+queue
