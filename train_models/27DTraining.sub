@@ -6,7 +6,7 @@ error 		= logs/27Dtrain.$(ClusterId).$(ProcId).err
 log 		= logs/27Dtrain.$(ClusterId).log
 +JobFlavour	= "workday"
 transfer_input_files	= ../examples/27D/27D_train.py 
-request_gpus	= 4
+request_gpus	= 1
 request_cpus	= 1
 
 queue

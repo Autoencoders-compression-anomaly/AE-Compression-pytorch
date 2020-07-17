@@ -31,11 +31,7 @@ import matplotlib as mpl
 import seaborn as sns
 from corner import corner
 
-def correlationPlots():
-    makeCorner = False #Make corner plots
-    curr_save_folder = '/eos/user/s/sarobert/correlationPlots/'
-    
-    # Set up Network parameters
+def evaluateNetwork():
     loss_func = nn.MSELoss()
     path_to_saved_model = '/afs/cern.ch/user/s/sarobert/autoencoders/outputs/jul6-100ep-filterNorm/models/'
     modelFile =  'best_nn_utils_bs4096_lr1e-02_wd1e-02'
@@ -45,7 +41,7 @@ def correlationPlots():
     wd = 1e-2
     module = AE_bn_LeakyReLU
     model = module([27, 200, 200, 200, 14, 200, 200, 200, 27])
-    
+
     # Load data
     train = pd.read_pickle(BIN + 'process_data/all_jets_partial_train.pkl')
     test = pd.read_pickle(BIN + 'process_data/all_jets_partial_test.pkl')
@@ -64,7 +60,7 @@ def correlationPlots():
     train_ds = TensorDataset(torch.tensor(train.values, dtype=torch.float), torch.tensor(train.values, dtype=torch.float))
     valid_ds = TensorDataset(torch.tensor(test.values, dtype=torch.float), torch.tensor(test.values, dtype=torch.float))
 
-    # Create DataLoaders
+     # Create DataLoaders
     train_dl, valid_dl = get_data(train_ds, valid_ds, bs=bs)
 
     # Return DataBunch
@@ -75,6 +71,16 @@ def correlationPlots():
     learn.load(modelFile)
     learn.model.eval()
 
+    data = torch.tensor(test.values, dtype=torch.float)
+    #unnormalized_pred_df, unnormalized_data_df = get_unnormalized_reconstructions(learn.model, df=data_df, train_mean=train_mean, train_std=train_std, idxs=idxs)
+    pred = learn.model(data).cpu().detach().numpy()
+
+    return pred
+
+def correlationPlots():
+    makeCorner = False #Make corner plots
+    curr_save_folder = '/eos/user/s/sarobert/correlationPlots/'
+
      # Figures setup
     plt.close('all')
     unit_list = ['[GeV]', '[rad]', '[rad]', '[GeV]']
@@ -83,18 +89,15 @@ def correlationPlots():
     colors = ['red', 'c']
     markers = ['*', 's']
 
-      # Histograms
-    #idxs = (0, 100000)  # Pick events to compare
-    data = torch.tensor(test.values, dtype=torch.float)
-#    unnormalized_pred_df, unnormalized_data_df = get_unnormalized_reconstructions(learn.model, df=data_df, train_mean=train_mean, train_std=train_std, idxs=idxs)
-    pred = learn.model(data).cpu().detach().numpy()
-    data = data.cpu().detach().numpy()
-
-    data_df = pd.DataFrame(data, columns=test.columns)
-    pred_df = pd.DataFrame(pred, columns=test.columns)
+    # Histograms
+    pred = evaluateNetwork()
+    data = pd.read_pickle('/afs/cern.ch/work/s/sarobert/autoencoders/processedData/TLAJets.pkl')
+    columns = data.columns
+    #data_df = pd.DataFrame(data, columns=test.columns)
+    pred_df = pd.DataFrame(pred, columns=.columns)
     
      # Unnormalize
-    unnormalized_data_df = custom_unnormalize(data_df)
+    unnormalized_data_df = custom_unnormalize(data)
     unnormalized_pred_df = custom_unnormalize(pred_df)
 
     # Handle variables with discrete distributions
@@ -102,19 +105,18 @@ def correlationPlots():
     uniques = unnormalized_data_df['ActiveArea'].unique()
     utils.round_to_input(unnormalized_pred_df, uniques, 'ActiveArea')
 
-    #data = unnormalized_data_df
+    data = unnormalized_data_df
     pred = unnormalized_pred_df
-    #data = data_df
-    #pred = pred_df
-    #residuals = (pred - data) / data
-    #res_df = pd.DataFrame(residuals, columns=test.columns)
+    data = data_df
+    pred = pred_df
+    residuals = (pred - data) / data
+    res_df = pd.DataFrame(residuals, columns=columns)
 
-    #idxs = (0, 100000)  # Choose events to compare
     alph = 0.8
     n_bins = 80
-    labels = train.columns
-#    data = data.to_numpy() #convert to numpy to feed into pyplot
-    #pred = pred.to_numpy()
+    labels = data.columns
+    data = data.to_numpy() #convert to numpy to feed into pyplot
+    pred = pred.to_numpy()
 
     plt.close('all')
     # Compute correlations
@@ -134,7 +136,7 @@ def correlationPlots():
                 square=True, linewidths=.5, cbar_kws={"shrink": .5})
     plt.subplots_adjust(left=.23, bottom=.30, top=.99, right=.99)
 
-    fig_name = 'corr_16.png'
+    fig_name = 'TLAcorrelationsOut.png'
     plt.savefig(curr_save_folder + fig_name)
     
     if makeCorner:

@@ -19,7 +19,6 @@ fname = 'DAOD_TRIG6.16825104._000001.pool.root.1'
 filePath = path_to_data + folder + fname
 #ttree = uproot.open(filePath)['outTree']['nominal']
 tree = uproot.open(filePath)['CollectionTree']
-
 print(tree.keys())
 
 n_jets = sum(tree.array('HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.pt').counts)
@@ -114,8 +113,6 @@ branchnames = [
     prefix + '.OotFracClusters5',
 ]
 
-print('number of branches rd2: ' + str(len(branchnames)))
-
 df_dict = {}
 for pp, branchname in enumerate(branchnames):
     if 'EnergyPerSampling' in branchname:
@@ -124,6 +121,9 @@ for pp, branchname in enumerate(branchnames):
         variable = branchname.split('.')[1]
         df_dict[variable] = []
         jaggedX = tree.array(branchname)
+        if pp == 0:
+            print (branchname)
+            print(jaggedX)
         for ii, arr in enumerate(jaggedX):
             for kk, val in enumerate(arr):
                 df_dict[variable].append(val)

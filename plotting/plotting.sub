@@ -4,8 +4,8 @@ arguments	= $(ClusterId)$(ProcId)
 output 		= plotting.$(ClusterId).$(ProcId).out
 error 		= plotting.$(ClusterId).$(ProcId).err
 log 		= plotting.$(ClusterId).log
-+JobFlavour	= "workday"
-transfer_input_files	= correlationPlots.py 
-request_cpus	= 1
++JobFlavour	= "microcentury"
+transfer_input_files	= thresholdMigration.py 
+request_cpus	= 2
 
 queue
