@@ -46,8 +46,8 @@ save_dict = {}
 
 # Load data
 pathToData = '/afs/cern.ch/work/s/sarobert/autoencoders/processedData/'
-train = pd.read_pickle(pathToData + 'tla_jets_train.pkl')
-test = pd.read_pickle(pathToData + 'tla_jets_test.pkl')
+train = pd.read_pickle(BIN + 'process_data/tla_jets_train.pkl')
+test = pd.read_pickle(BIN + 'process_data/tla_jets_test.pkl')
 
 #Filter and normalize data
 #train = filter_jets(train)

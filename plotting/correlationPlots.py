@@ -79,6 +79,7 @@ def evaluateNetwork():
 
 def correlationPlots():
     makeCorner = False #Make corner plots
+    useNetwork = False #If using a network to make predictions
     curr_save_folder = '/eos/user/s/sarobert/correlationPlots/'
 
      # Figures setup
@@ -90,37 +91,44 @@ def correlationPlots():
     markers = ['*', 's']
 
     # Histograms
-    pred = evaluateNetwork()
-    data = pd.read_pickle('/afs/cern.ch/work/s/sarobert/autoencoders/processedData/TLAJets.pkl')
-    columns = data.columns
-    #data_df = pd.DataFrame(data, columns=test.columns)
-    pred_df = pd.DataFrame(pred, columns=.columns)
+    if useNetwork:
+        pred = evaluateNetwork()
+        data = pd.read_pickle('/afs/cern.ch/work/s/sarobert/autoencoders/processedData/TLAJets.pkl')
+        columns = data.columns
+        #data_df = pd.DataFrame(data, columns=test.columns)
+        pred_df = pd.DataFrame(pred, columns=columns)
     
-     # Unnormalize
-    unnormalized_data_df = custom_unnormalize(data)
-    unnormalized_pred_df = custom_unnormalize(pred_df)
+        # Unnormalize
+        unnormalized_data_df = custom_unnormalize(data)
+        unnormalized_pred_df = custom_unnormalize(pred_df)
+        
+        # Handle variables with discrete distributions
+        unnormalized_pred_df['N90Constituents'] = unnormalized_pred_df['N90Constituents'].round()
+        uniques = unnormalized_data_df['ActiveArea'].unique()
+        utils.round_to_input(unnormalized_pred_df, uniques, 'ActiveArea')
 
-    # Handle variables with discrete distributions
-    unnormalized_pred_df['N90Constituents'] = unnormalized_pred_df['N90Constituents'].round()
-    uniques = unnormalized_data_df['ActiveArea'].unique()
-    utils.round_to_input(unnormalized_pred_df, uniques, 'ActiveArea')
+        data = unnormalized_data_df
+        pred = unnormalized_pred_df
+        data = data_df
+        pred = pred_df
+        residuals = (pred - data) / data
+        res_df = pd.DataFrame(residuals, columns=columns)
 
-    data = unnormalized_data_df
-    pred = unnormalized_pred_df
-    data = data_df
-    pred = pred_df
-    residuals = (pred - data) / data
-    res_df = pd.DataFrame(residuals, columns=columns)
+        data = data.to_numpy()
+        pred = pred.to_numpy()
+
+    else:
+        data = pd.read_pickle(BIN + 'process_data/TLAJets.pkl')
+        columns = data.columns
 
     alph = 0.8
     n_bins = 80
     labels = data.columns
-    data = data.to_numpy() #convert to numpy to feed into pyplot
-    pred = pred.to_numpy()
+    
 
     plt.close('all')
     # Compute correlations
-    corr = pred.corr()
+    corr = data.corr()
     print (corr)
     # Generate a mask for the upper triangle
     mask = np.zeros_like(corr, dtype=np.bool)
@@ -136,7 +144,7 @@ def correlationPlots():
                 square=True, linewidths=.5, cbar_kws={"shrink": .5})
     plt.subplots_adjust(left=.23, bottom=.30, top=.99, right=.99)
 
-    fig_name = 'TLAcorrelationsOut.png'
+    fig_name = 'TLAcorrelationsIn.png'
     plt.savefig(curr_save_folder + fig_name)
     
     if makeCorner:

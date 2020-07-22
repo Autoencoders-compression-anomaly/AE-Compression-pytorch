@@ -15,4 +15,4 @@ pip3 install -r ${pathToAE}"requirements.txt"
 pip3 install $pathToAE
 
 #Make plots
-python3 migrationThreshold.py
+python3 thresholdMigration.py

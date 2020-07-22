@@ -7,15 +7,15 @@ import matplotlib.pyplot as plt
 from HEPAutoencoders.utils import min_filter_jets, normalize, filter_jets, custom_normalization
 
 def varDistHists():
-    curr_save_folder = '/eos/user/s/sarobert/variableDists/' #Where you want the plots
+    curr_save_folder = '/eos/user/s/sarobert/TLAvariableDists/' #Where you want the plots
     #curr_save_folder = ''
 
     #Which plots to make
-    makeRaw = False
-    makeFilter = False
-    makeMin = False
+    makeRaw = True
+    makeFilter = True
+    makeMin = True
     makeNorm = True
-    makeMinNorm = False
+    makeMinNorm = True
 
     #Set up figures
     unit_list = ['[GeV]', '[rad]', '[rad]', '[GeV]']
@@ -25,8 +25,9 @@ def varDistHists():
     markers = ['*', 's']
     n_bins = 80
 
-    train = pd.read_pickle(BIN + 'process_data/all_jets_partial_train.pkl')
-    test = pd.read_pickle(BIN + 'process_data/all_jets_partial_test.pkl')
+    pathToData = '/afs/cern.ch/work/s/sarobert/autoencoders/processedData/'
+    train = pd.read_pickle(BIN + 'process_data/tla_jets_train.pkl')
+    test = pd.read_pickle(BIN + 'process_data/tla_jets_test.pkl')
     data = pd.concat([train, test])
     labels = data.columns
 
@@ -131,12 +132,12 @@ def varDistHists():
             'EMFrac' : [-1.2, 1.2],
             'OotFracClusters5' : [-1./3.],
             'OotFracClusters10' : [-1./3.],
-            'Width' : [-5, 5]
+            'Width' : [-5, 5],
             'WidthPhi' : [-5/.6, 5/.6],
             'Timing' : [-25/8, 25/8],
             'LArQuality' : [1.8],
             'HECQuality' : [-2.5, 2.5],
-            'NegativeE' : [np.log(301) / 1.6],# 300]
+            'NegativeE' : [np.log(301) / 1.6]# 300]
         }
 
         #Filtered and Normalized

@@ -11,15 +11,15 @@ def processTLA():
     #filePath = path_to_data + folder + fname
     treeName = 'CollectionTree'
     prefix ='HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn'
-    #files = ROOT.std.vector("string")(10)
-#    for i in range(10):
-#        if (i == 9):
-#            files[i] = path_to_data + fname1 + str(i+1) + fname2
-#        else:
-#            files[i] = path_to_data + fname1 + '0' + str(i+1) + fname2
+    files = ROOT.std.vector("string")(10)
+    for i in range(10):
+        if (i == 9):
+            files[i] = path_to_data + fname1 + str(i+1) + fname2
+        else:
+            files[i] = path_to_data + fname1 + '0' + str(i+1) + fname2
         
-    files = path_to_data + fname1 + '16' + fname2
-    print (files)
+#    files = path_to_data + fname1 + '16' + fname2
+#    print (files)
     df = RDataFrame(treeName, files)
 
     branchnames = [
@@ -83,22 +83,22 @@ def processTLA():
     df_np = cut_df.AsNumpy(branchnames)
     df_pd = pd.DataFrame(df_np)
     print ('converted to numpy')
-    print (df_pd.head())
+ #   print (df_pd.head())
 
     df_dict = {}
     for pp, branchname in enumerate(branchnames):
         if 'EnergyPerSampling' in branchname:
             pass
         else:
-            #variable = branchname.split('.')[1]
             df_dict[branchname] = []
             jaggedX = df_pd[branchname]
-            if pp == 0:
-                print (branchname)
-                print(jaggedX)
+            #if pp == 0:
+            #    print (branchname)
+            #    print(jaggedX)
             for ii, arr in enumerate(jaggedX):
                 for kk, val in enumerate(arr):
-                    df_dict[branchname].append(val)
+                    if kk in range(2):
+                        df_dict[branchname].append(val)
     if pp % 3 == 0:
         print((pp * 100) // len(branchname), '%')
     print('100%')
@@ -109,6 +109,6 @@ def processTLA():
     del df_dict
 
     print(partial_df.head())
-    partial_df.to_pickle('TLAJets_testing.pkl')
+    partial_df.to_pickle('TLAJets.pkl')
 
 processTLA()

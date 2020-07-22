@@ -5,29 +5,18 @@ import os.path
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import pickle
-import time
-import datetime
 
 import torch
 import torch.nn as nn
-import torch.optim as optim
-import torch.utils.data
 
 from torch.utils.data import TensorDataset
-from fastai.callbacks.tracker import SaveModelCallback
-#import my_matplotlib_style as ms
-#from utils as ms
 
 from fastai import basic_train, basic_data, torch_core
 from fastai.callbacks import ActivationStats
-from fastai import train as tr
 
-from HEPAutoencoders.nn_utils import AE_basic, AE_bn, AE_LeakyReLU, AE_bn_LeakyReLU, AE_big, AE_3D_50, AE_3D_50_bn_drop, AE_3D_50cone, AE_3D_100, AE_3D_100_bn_drop, AE_3D_100cone_bn_drop, AE_3D_200, AE_3D_200_bn_drop, AE_3D_500cone_bn, AE_3D_500cone_bn
-from HEPAutoencoders.nn_utils import get_data, RMSELoss
+from HEPAutoencoders.nn_utils import AE_basic, AE_bn, AE_LeakyReLU, AE_bn_LeakyReLU, AE_big, AE_3D_50, AE_3D_50_bn_drop, AE_3D_50cone, AE_3D_100, AE_3D_100_bn_drop, AE_3D_100cone_bn_drop, AE_3D_200, AE_3D_200_bn_drop, AE_3D_500cone_bn, AE_3D_500cone_bn, get_data, RMSELoss
 from HEPAutoencoders.utils import min_filter_jets, filter_jets, plot_activations, custom_normalization, normalize, custom_unnormalize
 import HEPAutoencoders.utils as utils
-import matplotlib as mpl
 
 def getPred(data):
     loss_func = nn.MSELoss()
@@ -89,16 +78,16 @@ def passCleaning(row):
         return False
     if (np.abs(row['NegativeE']) > 60000):
         return False
-    if (row['EMFrac'] > .95 and row['LArQuality'] > .8 and row['AvgerageLArQF']/65535 > .8 and np.abs(row['eta']) < 2.8):
+    if (row['EMFrac'] > .95 and row['LArQuality'] > .8 and row['AverageLArQF']/65535 > .8 and np.abs(row['eta']) < 2.8):
         return False
     if (row['EMFrac'] < .05 and np.abs(row['eta']) >= 2):
         return False
     else:
         return True
 
-def correlationPlots():
-    makeCorner = False #Make corner plots
+def thresholdMigration(data_str):
     curr_save_folder = '/eos/user/s/sarobert/correlationPlots/'
+    save = True
 
      # Figures setup
     plt.close('all')
@@ -108,11 +97,13 @@ def correlationPlots():
     colors = ['red', 'c']
     markers = ['*', 's']
 
-    # Histograms
-    data = pd.read_pickle('/afs/cern.ch/work/s/sarobert/autoencoders/processedData/TLAJets_testing.pkl')
+    #Load Data
+    data = pd.read_pickle(data_str)
+    print ('Loaded Data')
     data = filter_jets(data)
-    data = data[0:1000]
+    #data = data[0:1000] #To make running on lxplus easier
     pred = getPred(data)
+    print ('Evaluated Data')
     columns = data.columns
     
     #print('Input')
@@ -129,14 +120,20 @@ def correlationPlots():
         passed = int(passCleaning(row))
         predPF.append(passed)
 
-    #print ('input', 'output')
-    #print (dataPF, predPF)
+#    print('input')
+#    print(dataPF)
+#    print('output')
+#    print(predPF)
 
-    plt.scatter(dataPF, predPF)
-    plt.title('reconstruction of phi comparison')
-    plt.xlabel('Input')
-    plt.ylabel('Output')
-    plt.savefig(curr_save_folder + 'phiCompare2.png')
+    plt.hist2d(dataPF, predPF, bins=(2,2), range=[[0,1],[0,1]], cmap=plt.cm.jet)
+    plt.colorbar()
+    plt.title('Jet Quality Threshold Migration')
+    plt.xlabel('Input (1 pass, 0 fail)')
+    plt.ylabel('AE Reconstruction')
+    if save:
+        plt.savefig(curr_save_folder + 'threshold.png')
+
 #data = pd.read_pickle('/afs/cern.ch/work/s/sarobert/autoencoders/processedData/TLAJets.pkl')
 #getPred(data)
-correlationPlots()
+data_str = '/afs/cern.ch/work/s/sarobert/autoencoders/processedData/TLAJets.pkl'
+thresholdMigration(data_str)
