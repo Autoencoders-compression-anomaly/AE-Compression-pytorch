@@ -33,7 +33,7 @@ from corner import corner
 
 def evaluateNetwork():
     loss_func = nn.MSELoss()
-    path_to_saved_model = '/afs/cern.ch/user/s/sarobert/autoencoders/outputs/jul6-100ep-filterNorm/models/'
+    path_to_saved_model = '/afs/cern.ch/user/s/sarobert/autoencoders/outputs/jul21-100ep-TLANorm/models/'
     modelFile =  'best_nn_utils_bs4096_lr1e-02_wd1e-02'
     bn_wd = False  # Don't use weight decay for batchnorm layers
     true_wd = True  # wd will be used for all optimizers
@@ -43,8 +43,8 @@ def evaluateNetwork():
     model = module([27, 200, 200, 200, 14, 200, 200, 200, 27])
 
     # Load data
-    train = pd.read_pickle(BIN + 'process_data/all_jets_partial_train.pkl')
-    test = pd.read_pickle(BIN + 'process_data/all_jets_partial_test.pkl')
+    train = pd.read_pickle(BIN + 'process_data/tla_jets_train.pkl')
+    test = pd.read_pickle(BIN + 'process_data/tla_jets_test.pkl')
 
     #Filter and normalize data
     train = filter_jets(train)
@@ -79,8 +79,8 @@ def evaluateNetwork():
 
 def correlationPlots():
     makeCorner = False #Make corner plots
-    useNetwork = False #If using a network to make predictions
-    curr_save_folder = '/eos/user/s/sarobert/correlationPlots/'
+    useNetwork = True #If using a network to make predictions
+    curr_save_folder = '/eos/user/s/sarobert/TLAcorrelationPlots/'
 
      # Figures setup
     plt.close('all')
@@ -93,29 +93,27 @@ def correlationPlots():
     # Histograms
     if useNetwork:
         pred = evaluateNetwork()
-        data = pd.read_pickle('/afs/cern.ch/work/s/sarobert/autoencoders/processedData/TLAJets.pkl')
+        data = pd.read_pickle(BIN + 'process_data/TLAJets.pkl')
         columns = data.columns
         #data_df = pd.DataFrame(data, columns=test.columns)
         pred_df = pd.DataFrame(pred, columns=columns)
     
         # Unnormalize
-        unnormalized_data_df = custom_unnormalize(data)
+        #unnormalized_data_df = custom_unnormalize(data)
         unnormalized_pred_df = custom_unnormalize(pred_df)
         
         # Handle variables with discrete distributions
         unnormalized_pred_df['N90Constituents'] = unnormalized_pred_df['N90Constituents'].round()
-        uniques = unnormalized_data_df['ActiveArea'].unique()
+        uniques = data['ActiveArea'].unique()
         utils.round_to_input(unnormalized_pred_df, uniques, 'ActiveArea')
 
-        data = unnormalized_data_df
+        #data = unnormalized_data_df
         pred = unnormalized_pred_df
-        data = data_df
-        pred = pred_df
         residuals = (pred - data) / data
         res_df = pd.DataFrame(residuals, columns=columns)
 
-        data = data.to_numpy()
-        pred = pred.to_numpy()
+#        data = data.to_numpy()
+#        pred = pred.to_numpy()
 
     else:
         data = pd.read_pickle(BIN + 'process_data/TLAJets.pkl')
@@ -123,12 +121,12 @@ def correlationPlots():
 
     alph = 0.8
     n_bins = 80
-    labels = data.columns
+#    labels = data.columns
     
 
     plt.close('all')
     # Compute correlations
-    corr = data.corr()
+    corr = res_df.corr()
     print (corr)
     # Generate a mask for the upper triangle
     mask = np.zeros_like(corr, dtype=np.bool)
@@ -144,7 +142,7 @@ def correlationPlots():
                 square=True, linewidths=.5, cbar_kws={"shrink": .5})
     plt.subplots_adjust(left=.23, bottom=.30, top=.99, right=.99)
 
-    fig_name = 'TLAcorrelationsIn.png'
+    fig_name = 'TLAresidualsCorrelations.png'
     plt.savefig(curr_save_folder + fig_name)
     
     if makeCorner:

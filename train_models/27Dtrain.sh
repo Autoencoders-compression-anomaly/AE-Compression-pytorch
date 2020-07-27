@@ -14,7 +14,7 @@ modelDir="examples/27D/models/"
 pip3 install -r ${pathToAE}"requirements.txt"
 pip3 install $pathToAE
 
-outdir="jul21-100ep-TLAnone" #Where all outputs are stored
+outdir="jul22-500ep-TLAnorm" #Where all outputs are stored
 savedir="/afs/cern.ch/user/s/sarobert/autoencoders/outputs/" #Where the output is moved to after completion
 eosdir="/eos/user/s/sarobert/"${outdir}"_plots/" #Where copy of plots are stored
 mkdir $outdir

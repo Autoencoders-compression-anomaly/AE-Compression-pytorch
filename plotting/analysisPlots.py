@@ -32,10 +32,21 @@ import seaborn as sns
 from corner import corner
 
 def makePlots():
-    curr_save_folder = '/eos/user/s/sarobert/correlationPlots/'
+    curr_save_folder = '/eos/user/s/sarobert/TLAcorrelationPlots/'
+    
+    loss_func = nn.MSELoss()
+    path_to_saved_model = '/afs/cern.ch/user/s/sarobert/autoencoders/outputs/jul21-100ep-TLANorm/models/'
+    modelFile =  'best_nn_utils_bs4096_lr1e-02_wd1e-02'
+    bn_wd = False  # Don't use weight decay for batchnorm layers
+    true_wd = True  # wd will be used for all optimizers
+    bs = 4096
+    wd = 1e-2
+    module = AE_bn_LeakyReLU
+    model = module([27, 200, 200, 200, 14, 200, 200, 200, 27])
+    
     # Load data
-    train = pd.read_pickle(BIN + 'process_data/all_jets_partial_train.pkl')
-    test = pd.read_pickle(BIN + 'process_data/all_jets_partial_test.pkl')
+    train = pd.read_pickle(BIN + 'process_data/tla_jets_train.pkl')
+    test = pd.read_pickle(BIN + 'process_data/tla_jets_test.pkl')
     
     #Filter and normalize data
     train = filter_jets(train)
@@ -57,15 +68,6 @@ def makePlots():
     # Return DataBunch
     db = basic_data.DataBunch(train_dl, valid_dl)
 
-    loss_func = nn.MSELoss()
-    path_to_saved_model = '/afs/cern.ch/user/s/sarobert/autoencoders/outputs/jul6-100ep-filterNorm/models/'
-    modelFile =  'best_nn_utils_bs4096_lr1e-02_wd1e-02' 
-    bn_wd = False  # Don't use weight decay for batchnorm layers
-    true_wd = True  # wd will be used for all optimizers
-    bs = 4096 
-    wd = 1e-2
-    module = AE_bn_LeakyReLU
-    model = module([27, 200, 200, 200, 14, 200, 200, 200, 27])
     learn = basic_train.Learner(data=db, model=model, loss_func=loss_func, wd=wd, callback_fns=ActivationStats, bn_wd=bn_wd, true_wd=true_wd)
     learn.model_dir = path_to_saved_model
     learn.load(modelFile)
@@ -116,6 +118,42 @@ def makePlots():
         n_hist_data, bin_edges, _ = plt.hist(data[:, kk], color=colors[1], label='Input', alpha=1, bins=n_bins)
         n_hist_pred, _, _ = plt.hist(pred[:, kk], color=colors[0], label='Output', alpha=alph, bins=bin_edges)
         plt.suptitle(labels[kk])
+        if labels[kk] == 'eta':
+            plt.axvline(x = 2, color = 'darkorange')
+            plt.arrow(2, 1000, dx = .15, dy = 0, width = .1, color='darkorange')
+
+            plt.axvline(x = 2.8, color = 'red')
+            plt.arrow(2.8, 1000, dx = .15, dy = 0, width = .1, color='red')
+
+            plt.axvline(x = -2, color = 'darkorange')
+            plt.arrow(-2, 1000, dx = -.15, dy = 0, width = .1, color='darkorange')
+
+            plt.axvline(x = -2.8, color = 'red')
+            plt.arrow(-2.8, 1000, dx = -.15, dy = 0, width = .1, color='red')
+        if labels[kk] == 'HECFrac':
+            plt.axvline(x = .5, color = 'forestgreen')
+            plt.arrow(.5, 10000, dx = .001, dy = 0, width = .1, color='forestgreen')
+        if labels[kk] == 'HECQuality':
+            plt.axvline(x = .5, color = 'forestgreen')
+            plt.arrow(.5, 100000, dx = .15, dy = 0, width = .1, color='forestgreen')
+
+            plt.axvline(x = -.5, color = 'forestgreen')
+            plt.arrow(-.5, 100000, dx = -.15, dy = 0, width = .1, color='forestgreen')
+        if labels[kk] == 'AverageLArQF':
+            plt.axvline(x = .8 * 65535, color = 'k')
+            plt.arrow(.8 * 65535, 10000, dx = 2000, dy = 0, width = .1, color='k')
+        if labels[kk] == 'NegativeE':
+            plt.axvline(x = -60, color = 'k')
+            plt.arrow(-60, 100000, dx = -5, dy = 0, width = .1, color='k')
+        if labels[kk] == 'EMFrac':
+            plt.axvline(x=.95, color = 'red')
+            plt.arrow(.95, 10000, dx = .01, dy = 0, width = .1, color='red')
+
+            plt.axvline(x=.05, color = 'darkorange')
+            plt.arrow(.05, 10000, dx = -.01, dy = 0, width = .1, color='darkorange')
+        if labels[kk] == 'LArQuality':
+            plt.axvline(x=.8, color='red')
+            plt.arrow(.8, 10000, dx = .15, dy = 0, width = .1, color='red')
         plt.legend(loc="upper right")
         # plt.xlabel(variable_list[kk] + ' ' + unit_list[kk])
         plt.xlabel(labels[kk])
@@ -152,7 +190,6 @@ def makePlots():
     n_bins = 150
     for kk in np.arange(27):
         plt.close('all')
-        print ('making residual plot for ' + str(residuals.columns[kk]))
         plt.figure()
         if (residuals.columns[kk] in rangeDict):
             ranges = rangeDict[residuals.columns[kk]]
@@ -164,6 +201,19 @@ def makePlots():
         plt.xlabel(residuals.columns[kk])
         plt.ylabel('Number of events')
         fig_name = 'residualHist_%s' % residuals.columns[kk]
+        plt.savefig(curr_save_folder + fig_name)
+
+    #2D hist for input and output
+    for kk in np.arange(27):
+        plt.close('all')
+        plt.figure()
+        plt.hist2d(data[:, kk], pred[:, kk], bins=50, norm=mpl.colors.LogNorm())
+        plt.colorbar()
+        plt.suptitle('input-output comparison for ' + residuals.columns[kk])
+        #plt.legend(loc="upper right")
+        plt.xlabel(residuals.columns[kk] + ' input')
+        plt.ylabel('AE Reconstruction for ' + residuals.columns[kk])
+        fig_name = 'inout2D_%s' % residuals.columns[kk]
         plt.savefig(curr_save_folder + fig_name)
 
 makePlots()

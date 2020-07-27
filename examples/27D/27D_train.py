@@ -50,13 +50,13 @@ train = pd.read_pickle(BIN + 'process_data/tla_jets_train.pkl')
 test = pd.read_pickle(BIN + 'process_data/tla_jets_test.pkl')
 
 #Filter and normalize data
-#train = filter_jets(train)
-#test = filter_jets(test)
+train = filter_jets(train)
+test = filter_jets(test)
 
 #train = min_filter_jets(train)
 #test = min_filter_jets(test)
 
-#train, test = custom_normalization(train, test)
+train, test = custom_normalization(train, test)
 #train, test = normalize(train, test)
 
 train_mean = train.mean()
@@ -192,7 +192,7 @@ def train_and_save(model, epochs, lr, wd, pp, module_string, save_dict, ct, path
 #one_epochs = 100
 #one_lr = 1e-4
 #=======
-one_epochs = 100
+one_epochs = 500
 one_lr = 1e-2
 one_wd = 1e-2
 one_pp = None

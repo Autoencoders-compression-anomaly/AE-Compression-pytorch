@@ -12,10 +12,10 @@ def varDistHists():
 
     #Which plots to make
     makeRaw = True
-    makeFilter = True
-    makeMin = True
-    makeNorm = True
-    makeMinNorm = True
+    makeFilter = False
+    makeMin = False
+    makeNorm = False
+    makeMinNorm = False
 
     #Set up figures
     unit_list = ['[GeV]', '[rad]', '[rad]', '[GeV]']
@@ -55,12 +55,49 @@ def varDistHists():
         minNormTrain, minNormTest = custom_normalization(minTrain, minTest)
         dataMinNorm = pd.concat([minNormTrain, minNormTest]).to_numpy()
 
-    #RawDistributions
+    
+    #RawDistributions I apologize for the spaghetti
     if makeRaw:
         for kk in np.arange(27):
             plt.figure()
-            n_hist_data, bin_edges, _ = plt.hist(dataRaw[:, kk], color=colors[1], label='Input', alpha=1, bins=n_bins)
+            n_hist_data, bin_edges, _ = plt.hist(dataRaw[:, kk], color='deepskyblue', label='Input', alpha=1, bins=n_bins)
             plt.suptitle(labels[kk])
+            #if labels[kk] == 'eta':
+            #    plt.axvline(x = 2, color = 'darkorange')
+            #    plt.arrow(2, 1000, dx = .15, dy = 0, width = .1, color='darkorange')
+                
+            #    plt.axvline(x = 2.8, color = 'red')
+            #    plt.arrow(2.8, 1000, dx = .15, dy = 0, width = .1, color='red')
+                
+            #    plt.axvline(x = -2, color = 'darkorange')
+            #    plt.arrow(-2, 1000, dx = -.15, dy = 0, width = .1, color='darkorange')
+                
+            #    plt.axvline(x = -2.8, color = 'red')
+            #    plt.arrow(-2.8, 1000, dx = -.15, dy = 0, width = .1, color='red')
+            #if labels[kk] == 'HECFrac':
+            #    plt.axvline(x = .5, color = 'forestgreen')
+            #    plt.arrow(.5, 100000, dx = .001, dy = 0, width = .1, color='forestgreen')
+            #if labels[kk] == 'HECQuality':
+            #    plt.axvline(x = .5, color = 'forestgreen')
+            #    plt.arrow(.5, 100000, dx = .15, dy = 0, width = .1, color='forestgreen')
+                
+            #    plt.axvline(x = -.5, color = 'forestgreen')
+            #    plt.arrow(-.5, 100000, dx = -.15, dy = 0, width = .1, color='forestgreen')
+            #if labels[kk] == 'AverageLArQF':
+            #    plt.axvline(x = .8 * 65535, color = 'k')
+            #    plt.arrow(.8 * 65535, 100000, dx = 2000, dy = 0, width = .1, color='k')
+            #if labels[kk] == 'NegativeE':
+            #    plt.axvline(x = -60000, color = 'k')
+            #    plt.arrow(-60000, 100000, dx = -1000, dy = 0, width = .1, color='k')
+            #if labels[kk] == 'EMFrac':
+            #    plt.axvline(x=.95, color = 'red')
+            #    plt.arrow(.95, 100000, dx = .01, dy = 0, width = .1, color='red')
+                
+            #    plt.axvline(x=.05, color = 'darkorange')
+            #    plt.arrow(.05, 100000, dx = -.01, dy = 0, width = .1, color='darkorange')
+            #if labels[kk] == 'LArQuality':
+            #    plt.axvline(x=.8, color='red')
+            #    plt.arrow(.8, 100000, dx = .15, dy = 0, width = .1, color='red')
             plt.xlabel(labels[kk])
             plt.ylabel('Number of events')
             plt.yscale('log')

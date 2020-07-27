@@ -11,14 +11,14 @@ def processTLA():
     #filePath = path_to_data + folder + fname
     treeName = 'CollectionTree'
     prefix ='HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn'
-    files = ROOT.std.vector("string")(10)
-    for i in range(10):
-        if (i == 9):
-            files[i] = path_to_data + fname1 + str(i+1) + fname2
-        else:
-            files[i] = path_to_data + fname1 + '0' + str(i+1) + fname2
+#    files = ROOT.std.vector("string")(10)
+#    for i in range(10):
+#        if (i == 9):
+#            files[i] = path_to_data + fname1 + str(i+1) + fname2
+#        else:
+#            files[i] = path_to_data + fname1 + '0' + str(i+1) + fname2
         
-#    files = path_to_data + fname1 + '16' + fname2
+    files = path_to_data + fname1 + '16' + fname2
 #    print (files)
     df = RDataFrame(treeName, files)
 
@@ -109,6 +109,7 @@ def processTLA():
     del df_dict
 
     print(partial_df.head())
-    partial_df.to_pickle('TLAJets.pkl')
+    saveDir = '/afs/cern.ch/work/s/sarobert/autoencoders/processedData/'
+    partial_df.to_pickle(saveDir + 'TLAJets_testing.pkl')
 
 processTLA()

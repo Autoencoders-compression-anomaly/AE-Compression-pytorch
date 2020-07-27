@@ -6,6 +6,6 @@ error 		= plotting.$(ClusterId).$(ProcId).err
 log 		= plotting.$(ClusterId).log
 +JobFlavour	= "microcentury"
 transfer_input_files	= thresholdMigration.py 
-request_cpus	= 4
+request_cpus	= 2
 
 queue
