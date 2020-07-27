@@ -10,7 +10,7 @@ import matplotlib as mpl
 def passClean(row): #All Cleaning Criteria
     if (row['HECFrac'] > 0.5 and np.abs(row['HECQuality']) > .5 and row['AverageLArQF']/65535 > .8): #See Evernote for division explanation
         return False
-    if (np.abs(row['NegativeE']) > 60000):
+    if (np.abs(row['NegativeE']) > 60):
         return False
     if (row['EMFrac'] > .95 and row['LArQuality'] > .8 and row['AverageLArQF']/65535 > .8 and np.abs(row['eta']) < 2.8):
         return False
@@ -41,13 +41,13 @@ def thresholdMigration(data_str, pred_str):
     dataPF = []
     predPF = []
     for index, row in data.iterrows():
-        #passed = int(passClean(row))
-        passed = int(passVar(row))
+        passed = int(passClean(row))
+        #passed = int(passVar(row))
         dataPF.append(passed)
     
     for index, row in pred.iterrows():
-        #passed = int(passClean(row))
-        passed = int(passVar(row))
+        passed = int(passClean(row))
+        #passed = int(passVar(row))
         predPF.append(passed)
 
     counts, xedges, yedge, plot = plt.hist2d(dataPF, predPF, bins=2, range=[[0,1],[0,1]], cmap=plt.cm.jet, norm=mpl.colors.LogNorm())
