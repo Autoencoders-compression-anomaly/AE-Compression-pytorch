@@ -6,13 +6,6 @@
 
 *.ipynb_checkpoints*
 
-*.pdf
-
-*.pth
-
-*.err
-
-*.png
 
 *.out
 
