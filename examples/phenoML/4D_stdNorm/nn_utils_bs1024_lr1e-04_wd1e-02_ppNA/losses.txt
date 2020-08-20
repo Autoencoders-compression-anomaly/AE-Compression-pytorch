@@ -1,0 +1,2 @@
+Epoch 0    Validation MSELoss: 3.198242e-03    Training MSELoss: 4.714183e-03
+Epoch 1    Validation MSELoss: 8.520562e-04    Training MSELoss: 2.220115e-03
