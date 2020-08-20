@@ -1,0 +1,10 @@
+executable              = darkmachines_4d.sh
+arguments               = $(ClusterId)$(ProcId)
+output                  = 4d_run.$(ClusterId).$(ProcId).out
+error                   = 4d_run.$(ClusterId).$(ProcId).err
+log                     = phenoML_4d_run.$(ClusterId).log
+request_GPUs = 1
+request_CPUs = 4
++JobFlavour = "testmatch"
+queue
+
