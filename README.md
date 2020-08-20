@@ -3,124 +3,196 @@
 [![Gitter](https://badges.gitter.im/HEPAutoencoders/community.svg)](https://gitter.im/HEPAutoencoders/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 
-ML-compression of ATLAS trigger jet events using autoencoders, with the PyTorch and fastai python libraries.
+ML-compression of HEP data events using deep autoencoders with the PyTorch and fastai python libraries. The scripts in the repository were used to perform compression and evaluate the performance of autoencoders on three different datasets: 
+1. Internal data generated from ATLAS event generator
+2. [PhenoML dataset](https://zenodo.org/record/3685861#.Xz7aAJZS-kA)
+3. [Dataset from a hackathon related with the darkmachines unsupervised challenge project](https://zenodo.org/record/3961917#.Xz7ZnJZS-kB)
 
-It strives to be easy to experiment with, but also parallelizable and GPU-friendly in order to aid hyperparameters scans on clusters.
+The repository is developed by Honey Gupta, as a part of the Google Summer of Code project, before which, it was built by Eric Wallin and Eric Wulff as a part of their bachelors' and master's project at Lund University. Technical explanations can be found in Eric Wulff's [thesis](https://lup.lub.lu.se/student-papers/search/publication/9004751). 
 
-This repository is developed by Erik Wallin, as a bachelor project at Lund University. Builds directly on the master thesis [project](https://github.com/erwulff/lth_thesis_project) of Eric Wulff. Technical explanations can be found in his [thesis](https://lup.lub.lu.se/student-papers/search/publication/9004751). Erik Wallin's thesis holds further details (link will be here soon).
+A  summry of the experiments performed and the results obtained as a part of [Google Summer of Code 2020 Project](https://summerofcode.withgoogle.com/projects/#5677663735250944) can be found in this [report](). 
 
-[Setup](#setup)
+## Jump to:
+* [Setup](#setup)
 
-[Quick guide](#quick-guide)
+* [Repository Structure](#repository-structure)
 
-[Data extraction](#data-extraction)
+* [Process data](#process-data)
 
-[Training](#training)
+* [Training](#training)
 
-[Analysis](#analysis)
+* [Testing and Analysis](#testing-and-analysis)
 
-[Saving back to ROOT](#saving-back-to-root)
-
-[TODO and ideas](#todo-and-ideas)
 
 ## Setup:
-#### Running the container (not needed on lxplus):
-Pull the docker container containing useful libraries:
-`docker pull atlasml/ml-base`
+---
 
-Run an interactive bash shell in the container, allowing the hostmachine to open jupyter-notebooks running in the container. The port 8899 can be changed if it is already taken.
-`docker run -it -p 8899:8888 atlasml/ml-base`
+### Using virtual environment (recommended for server machines, such as [LXPLUS](http://information-technology.web.cern.ch/services/lxplus-service) )
 
-Check the container's name and attach it:
-```
-docker ps
-docker attach <name>
-```
+1. Fetch the latest version of the project:
+    ```
+    git clone https://github.com/Autoencoders-compression-anomaly/AE-Compression-pytorch.git
+    cd AE-Compression-pytorch
+    ```
 
-#### Running using virtual envonment (recommended for lxplus):
+2. #### Predefined virtual env creation and package installation (Simpler):
 
-Fetch the latest version of the project:
-```
-git clone https://github.com/Autoencoders-compression-anomaly/AE-Compression-pytorch.git
-cd AE-Compression-pytorch
-```
+    ```
+    chmod +x install_libs.sh
+    ./install_libs.sh
 
-##### Predefined installation (Simpler):
-```
-chmod +x install_libs.sh
-./install_libs.sh
+    ```
+    _Note that all the required packages/libraries for running the scripts in this repo have been added to the bash file. You can add others if needed._
+    
+    OR
 
-```
 
-##### Manual installation
+2. #### Manual installation
+    Create directory for your virtualenv
+    ```
+    mkdir venv
+    cd venv
+    python -m virtualenv -p python3 venv
+    source bin/activate
+    cd ..
+    ```
 
-Create directory for your virtualenv
-```
-mkdir venv
-```
-(To enter the virtualenv:)
-```
-cd venv
-python -m virtualenv -p python3 venv
-source bin/activate
-cd ..
-```
+    Now to install dependencies:
+    ```
+    pip -r requirements.txt
+    ```
+    
+---
 
-Now, to 
-Install dependencies:
-```
-pip3 -r requirements.txt
-```
-On lxplus, just use "pip". 
+### Using a Docker container:
 
-##### Install the package
+1. Pull the docker container containing useful libraries:
+    ```
+    docker pull atlasml/ml-base
+    ```
 
-Lastly the AE-Compression-pytorch package can be installed (run from the directory that holds setup.py):
-```
-pip3 install .
-```
-Alternatively, if you want to easily edit and run the contents of the package without manually re-installing it, instead run:
-```
-pip3 install -e .
-```
+    Run an interactive bash shell in the container, allowing the hostmachine to open jupyter-notebooks running in the container. The port 8899 can be changed if it is already taken.
+    ```
+    docker run -it -p 8899:8888 atlasml/ml-base
+    ```
 
-With a jupyter-notebook running inside the container, one can access it on the hostmachine from the URL localhost:8899
+    Check the container's name and attach it:
 
-## Quick guide
-**Pre-processing:** Extract data from the ATLAS (D)xAOD file-format using the functions named `prep_processing.process_*()`
+    ```
+    docker ps
+    docker attach <name>
+    ```
 
-The data in the examples come in two types: 4-dim data and the 27-dim data. (Although the original events holds 29 values, only 27 of them are of constant size.) 
+2. Install the package
 
-These dataframe are converted into pandas Dataframes, which in turned may be pickled for further use. 
+    Lastly the AE-Compression-pytorch package can be installed (run from the directory that holds setup.py):
+    ```
+    pip install .
+    ```
+    Alternatively, if you want to easily edit and run the contents of the package without manually re-installing it, instead run:
+    ```
+    pip install -e .
+    ```
 
-**Training:** An (uncommented) example of training a 4D-network is `examples/4D/4D_training.ipynb` and looks very much like every other training script in this project. If the data you have looks any different, the models will need to be retrained.
+    With a jupyter-notebook running inside the container, one can access it on the hostmachine from the URL localhost:8899
 
-**Analysis and plots:** An example of running a 4-dimensional already trained network is `examples/4D/TLA_analysis.ipynb`
-For an example of analysing a 27-D network is `examples/27D/27D_analysis.py`.
+---
 
-**Code structure:** 
-`nn_utils.py` holds various heplful for networks structures and training functions.
+## Repository Structure
 
-`utils.py` holds functions for normalization and event filtering, amongst others.
+* ### HEPAutoencoders
+    This folder contains utility python scripts needed by the main python scripts.
 
-`pre_processing.py` holds functions for reading raw data.
+    1. `pre-processing.py`: extracts data from the ATLAS (D)xAOD file-format (ROOT files) using the functions named `prep_processing.process_*()`
 
-`postprocessing.py` holds various functions for saving data back into the ROOT fileformat. 
+        The experiments for this dataset was done with two types of data: 4-dim data and the 27-dim data. (Although the original events holds 29 values, only 27 of them are of constant size.) 
 
-## Data extraction
-The raw DxAODs can be processed into a 4-dimensional dataset with `process_root()`, which returns pandas dataframes. These can be pickled for ease of use. Since pickled python objects are very version incompatible, it is recommended to process the raw ROOT xAODs instead of providing the pickled processed data. 
+        These dataframe are converted into pandas Dataframes, which in turned may be pickled for further use. 
+
+    2. `nn_utils.py`: holds various helpful methods for building the networks. It also contains some methods for training.
+
+    3. `utils.py`: holds functions for normalization and event filtering, amongst others.
+
+    4. `postprocessing.py`: holds various functions for saving data back into the ROOT fileformat.
+
+* ### Process_data
+    This repository contains python scripts that can be used to create the training and testing datasets from ATLAS, PhenoML and DarkMachines datasets. 
+    
+    All the python script have very similar codes and functions, except for some small variations depending on the experiments for which they were used. The names of the python files should be self explanatory to define the task and the kind of dataset they create. 
+    
+    This repository also contains two Jupyter notebooks: 
+    1. `plot_particle_distribution.ipynb`: contains the functions to plot the particle distribution for a particular process (from the PhenoML dataset). It also contains the scripts to create data distribution plots for different process (.csv) files.
+    2. `process_data_as_4D.ipynb`: gives a visual intuition about different parts of the processing scripts and their functions.
+
+* ### Scale data all
+    This folder contains a script that scales (or normalizes) the data generated by the `processing` scripts. The script uses `FunctionScaler` scaler to normalize the data. This was used in the experiments mentioned in Eric Wulff's thesis. 
+    
+    However, during our experiments, we shifted to standard normalization and mainly to custom normalization, which is implemented as a part of the training and testing scripts. 
+
+    _Keeping this script for the sake of completeness._
+
+* ### Train_models
+    Throughout the project, the experiments were run using a batch service at CERN called HTCondor. This folder contains the scripts that were used for submitting different training jobs during the experiments. 
+
+    Have included these to ensure reproducability and for making Knowledge Transfer easier.
+
+* ### Examples
+    This is the folder that contains the training, testing and analysis scripts for all the experiments for the abovementioned three datasets, with standard and custom normalization. 
+    1. `phenoML`
+        
+        This folder contains backbone training scripts and testing notebooks. 
+        
+        a. `train_eventsAs4D*` can be used to train an autoencoder model on 4D data extracted from the event-level data present in the PhenoML dataset. 
+        
+        b. `test_4D(*)` can be used to test the trained models and create residual anc correlation plots.
+
+        c. `test_4D_customNorm_differentParticles_stackedPlots.ipynb` contains the script to test a model trained with 4D custom normalized data and contains the methods to create stacked or overlapped residual or error plots for performing analysis.
+
+        The model for this experiment was trained on jet (j and b) particles and tested on different particles such as electrons (e<sup>-</sup>), positrons (e<sup>+</sup>), muons(&mu;<sup>-</sup>), antimuons (&mu;<sup>+</sup>) and photons (&gamma;) 
+
+        d. `4D_customNorm` contains the scripts and the models used for training and analysing the 4D data from PhenoML dataset. The model in this is the one used to create the analysis plot for the related experiment
+
+        e. `4D_stdNorm`: similar to custom norm folder, this contains the training script, trained model and the testing jupyter notebook for experiments performed with standard normalization
+
+        f. `half_data`: this folder has the same structure as above, just that the models in this folder were trained with half the training data used in the above experiments.
+
+    2. `darkmachines`
+
+        `4D_customNorm/` contains the training script to train an autoencoder model on data belonging to `chan2a` type of the DarkMachine challenge dataset, which mostly contains other particles (e<sup>-</sup>, e<sup>+</sup>, &mu;<sup>-</sup>, &mu;<sup>+</sup>, &gamma;) mixed with jets but with a lesser percentage of jets. 
+        
+        The analysis was done on `chan3` data, that mostly contains jets (j and b).
+
+
+    3. ATLAS data
+
+        a. `4D`: An example of training a 4D-network can be found in `examples/4D/4D_training.ipynb`. 
+        
+        Fastai saves trained models in the folder `models/` relative to the training script, with the .pth file extension. An example of running or testing a 4-dimensional already trained network can be found in `TLA_analysis.ipynb`
+
+        b. `27D`: Most of the code here was take from the repository by Eric Wulff. `27D_train.py` contains the script to train the network on a 27D data.
+        For an example of analysing a 27-D network, you can refer to `27D_analysis.py`.
+
+---
+
+## Process data
+
+The scripts to process data can be found in the `process_data` folder. The `process.sub` and `process.sh` files can be used to submit a batch job on `HTCondor`.
+
+A description of the scripts can be found in the previous section.
+
+---
 
 ## Training
-ML details of the training process are found in in Wulff's [thesis](https://lup.lub.lu.se/student-papers/search/publication/9004751). A well-functioning example is examples/4D/4D_training.ipynb
 
-Various examples that will work after some modification (but that were not significant enough to display here) can  be found in Wulff's [repo](https://github.com/erwulff/lth_thesis_project) 
+The training for different experiments can be found in the `examples` folder according to their dataset and nomalization type. 
 
-## Analysis
-fastai saves trained models in the folder `models/` relative to the training script, with the .pth file extension. 
+Again, a description of the folder and scripts can be found in the previous section.
 
-In `examplse/27D/27D_analysis.py` there is analysis of a network with a 18D latent space (i.e. a 27/18 compression ratio), with histogram comparisons of the different values and residual plots. Special attention might be given to these residuals as they tell a lot about the performance of the network.
+---
 
-## Saving back to ROOT
-To save a multi-dimensional array of decompressed data back into a ROOT TTree for analysis once again, the function ` postprocessing.ndarray_to_DxAOD()` is available. You'll have to run Athena yourself to turn this into a proper xAOD.
+## Testing and Analysis
 
+Each experiment's folder in the `examples` folder contains a Jupyter notebook to load the testing dataset, load the pre-trained model, run the models on the testing datasets and create residual and correlation plots. 
+
+Instructions to understand the methods in the Notebook can be found inside the notebooks.
 
