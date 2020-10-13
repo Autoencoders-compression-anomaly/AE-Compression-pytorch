@@ -1,85 +1,38 @@
-import matplotlib.pyplot as plt
+#!/bin/python
+
+#Authors: Eric Wulff, Erik Wallin, Honey Gupta, Caterina Doglioni
+#This script processes TLA ATLAS data into pickle files. The number of variables kept is currently 27.
+#If you want more variables, check the original root file and add to branchnames
+#If you want fewer variables, remove what you don't need from branchnames
+
 import numpy as np
 import pandas as pd
 import uproot
+import awkward
+import ROOT
 
 from sklearn.model_selection import train_test_split
 
-import torch
-import torch.nn as nn
-import torch.optim as optim
-from torch.utils.data import TensorDataset
-from torch.utils.data import DataLoader
+#change this to where your fileis
+path_to_data = '/Users/urania277/Work/20192020_Autoencoders/2020_HoneyProject/ATLAS_datasets/'
 
-path_to_data = '/afs/cern.ch/work/h/hgupta/public/AE-Compression-pytorch/datasets/'
-
-# Load a ROOT file
-folder = 'data18_13TeV.00364292.calibration_DataScouting_05_Jets.deriv.DAOD_TRIG6.r10657_p3592_p3754/'
+# Load a ROOT input file and its tree with uproot
 fname = 'DAOD_TRIG6.16825104._000263.pool.root.1'
-filePath = path_to_data + folder + fname
-#ttree = uproot.open(filePath)['outTree']['nominal']
-tree = uproot.open(filePath)['CollectionTree']
 
-print(tree.keys())
-
-n_jets = sum(tree.array('HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.pt').counts)
-print(n_jets)
-
-branchnames = [
-    # 4-momentum
-    'HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.pt',
-    'HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.eta',
-    'HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.phi',
-    'HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.m',
-    # Energy deposition in each calorimeter layer
-    'HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.EnergyPerSampling',
-    # Area of jet,used for pile-up suppression (4-vector)
-    'HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.ActiveArea',
-    'HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.ActiveArea4vec_eta',
-    'HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.ActiveArea4vec_m',
-    'HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.ActiveArea4vec_phi',
-    'HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.ActiveArea4vec_pt',
-    'HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.JetGhostArea',
-    # Variables related to quality of jet
-    'HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.AverageLArQF',
-    'HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.BchCorrCell',
-    'HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.NegativeE',
-    'HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.HECQuality',
-    'HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.LArQuality',
-    # Shape and position, most energetic cluster
-    'HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.Width',
-    'HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.WidthPhi',
-    'HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.CentroidR',
-    'HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.DetectorEta',
-    'HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.LeadingClusterCenterLambda',
-    'HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.LeadingClusterPt',
-    'HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.LeadingClusterSecondLambda',
-    'HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.LeadingClusterSecondR',
-    'HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.N90Constituents',
-    # Energy released in each calorimeter
-    'HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.EMFrac',
-    'HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.HECFrac',
-    # Variables related to the time of arrival of a jet
-    'HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.Timing',
-    'HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.OotFracClusters10',
-    'HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.OotFracClusters5',
-]
-
-print(len(branchnames))
-
-EnergyPerSampling = tree.array(branchnames[4])
-n_events = len(EnergyPerSampling)
-counts = EnergyPerSampling.counts
-print(n_events)
-
+#Branches in the initial trees
 prefix = 'HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn'
+#another possible prefix found in other files:
 #prefix = 'HLT_xAOD__JetContainer_a4tcemsubjesISFSAuxDyn'
+
 branchnames = [
     # 4-momentum
     prefix + '.pt',
     prefix + '.eta',
     prefix + '.phi',
     prefix + '.m',
+    ]
+
+extraBranchNames = [
     # Energy deposition in each calorimeter layer
     # prefix + '.EnergyPerSampling',
     # Area of jet,used for pile-up suppression (4-vector)
@@ -114,35 +67,59 @@ branchnames = [
     prefix + '.OotFracClusters5',
 ]
 
-print(len(branchnames))
+print("Number of variables considered: ", len(branchnames))
 
+#one problem we will have here is that when we want to call uproot's functions, the variable names have too many "."s in the names.
+#the solution is to set an alias, but this needs to be done on the ROOT version (rather than on the uproot version that we will use later)
+
+#f=ROOT.TFile(path_to_data+fname)
+#root_tree = f.Get("CollectionTree")
+
+#for branchName in branchnames :
+#    root_tree.SetAlias(prefix+"_"+branchName,prefix+"."+branchName)
+
+#You can print every variable (branch) in the original tree here
+#print(tree.keys())
+filePath = path_to_data + fname
+tree = uproot.open(filePath)['CollectionTree']
+
+#find out how many jets there are in this tree
+#Note that one event has more jets, but we ignore those boundaries
+n_jets = sum(tree.array('HLT_xAOD__JetContainer_TrigHLTJetDSSelectorCollectionAuxDyn.pt').counts)
+print("Number of jets in this dataset: ", n_jets)
+
+#dictionary containing the dataframes, one per variable
 df_dict = {}
-for pp, branchname in enumerate(branchnames):
+cache = {}
+#loop over all the variables
+for branchname in branchnames:
+    #for the time being, do not consider vector variables (there are many calorimeter samplings in a single jet)
     if 'EnergyPerSampling' in branchname:
         pass
     else:
+        print("Working on branch: ", branchname)
+        #create an array per branch and flatten it into a mega-array
+        branch_array = tree.array(branchname, cache=cache)
+        #only get the branch name without the prefix to clean things up a bit in the pandas later
         variable = branchname.split('.')[1]
         df_dict[variable] = []
-        jaggedX = tree.array(branchname)
-        for ii, arr in enumerate(jaggedX):
-            for kk, val in enumerate(arr):
-                df_dict[variable].append(val)
-    if pp % 3 == 0:
-        print((pp * 100) // len(branchnames), '%')
-print('100%')
+        #this is not super efficient/fast but it's simple - we want a dictionary that has the variable as key and an array as value, and each jet-entry as one of the entries in the array
+        #...for better solutions, see uproot.iterate
+        for event_entry in branch_array :
+            for jet_entry in event_entry :
+                df_dict[variable].append(jet_entry)
+
+#make a dataFrame out of the dictionary for easier splitting into train/test
 print('Creating DataFrame...')
 partial_df = pd.DataFrame(data=df_dict)
 print('done.')
 
-del df_dict
+partial_train, partial_test = train_test_split(partial_df, test_size=0.2, train_size=0.8, random_state=41)
+
+print('Creating DataFrame...')
 
 print(partial_df.head)
-
 print(partial_df.columns)
 
-partial_train, partial_test = train_test_split(partial_df, test_size=0.2, random_state=41)
-
-partial_train.to_pickle('/afs/cern.ch/work/h/hgupta/public/AE-Compression-pytorch/datasets/all_jets_partial_train_263.pkl')
-partial_test.to_pickle('/afs/cern.ch/work/h/hgupta/public/AE-Compression-pytorch/datasets/all_jets_partial_test_263.pkl')
-
-
+partial_train.to_pickle(path_to_data+'TLA_jets_train_80.pkl')
+partial_test.to_pickle(path_to_data+'TLA_jets_test_20.pkl')
