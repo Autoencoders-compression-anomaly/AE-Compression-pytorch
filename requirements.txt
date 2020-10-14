@@ -2,7 +2,7 @@ numpy
 torch
 pandas
 matplotlib
-fastai
+fastai==1.0.61
 corner
 uproot
 sklearn

@@ -11,10 +11,10 @@ cd ..
 #Install necessary packages
 pathToAE="/afs/cern.ch/user/s/sarobert/autoencoders/AE-Compression-pytorch/"
 modelDir="examples/27D/models/"
-pip3 install -r ${pathToAE}"requirements.txt"
+pip3 install --no-cache-dir -r ${pathToAE}"requirements.txt"
 pip3 install $pathToAE
 
-outdir="jul22-500ep-TLAnorm" #Where all outputs are stored
+outdir="oct12-100ep-piInt" #Where all outputs are stored
 savedir="/afs/cern.ch/user/s/sarobert/autoencoders/outputs/" #Where the output is moved to after completion
 eosdir="/eos/user/s/sarobert/"${outdir}"_plots/" #Where copy of plots are stored
 mkdir $outdir

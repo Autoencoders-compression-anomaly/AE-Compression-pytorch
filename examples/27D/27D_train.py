@@ -25,7 +25,7 @@ from fastai import train as tr
 
 from HEPAutoencoders.nn_utils import AE_basic, AE_bn, AE_LeakyReLU, AE_bn_LeakyReLU, AE_big, AE_3D_50, AE_3D_50_bn_drop, AE_3D_50cone, AE_3D_100, AE_3D_100_bn_drop, AE_3D_100cone_bn_drop, AE_3D_200, AE_3D_200_bn_drop, AE_3D_500cone_bn, AE_3D_500cone_bn
 from HEPAutoencoders.nn_utils import get_data, RMSELoss
-from HEPAutoencoders.utils import min_filter_jets, filter_jets, plot_activations, custom_normalization, normalize, custom_unnormalize 
+from HEPAutoencoders.utils import min_filter_jets, filter_jets, plot_activations, custom_normalization, normalize, custom_unnormalize, interval_normalization 
 import HEPAutoencoders.utils as utils
 import matplotlib as mpl
 import seaborn as sns
@@ -56,8 +56,9 @@ test = filter_jets(test)
 #train = min_filter_jets(train)
 #test = min_filter_jets(test)
 
-train, test = custom_normalization(train, test)
+#train, test = custom_normalization(train, test)
 #train, test = normalize(train, test)
+train, test = interval_normalization(train, test, -3.142, 3.142)
 
 train_mean = train.mean()
 train_std = train.std()
@@ -192,7 +193,7 @@ def train_and_save(model, epochs, lr, wd, pp, module_string, save_dict, ct, path
 #one_epochs = 100
 #one_lr = 1e-4
 #=======
-one_epochs = 500
+one_epochs = 100
 one_lr = 1e-2
 one_wd = 1e-2
 one_pp = None

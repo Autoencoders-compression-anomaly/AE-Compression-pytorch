@@ -407,7 +407,13 @@ def filter_jets(train):
     return train
 
 def min_filter_jets(train): #To allow normalization to be applied with minimum filtering
+    train['pt'] = train['pt'] / 1000.  # Convert to GeV
+    train['m'] = train['m'] / 1000.  # Convert to GeV
     train['LeadingClusterPt'] = train['LeadingClusterPt'] / 1000.  # Convert to GeV
+    train['LeadingClusterSecondR'] = train['LeadingClusterSecondR'] / 1000.  # Convert to GeV
+    train['LeadingClusterSecondLambda'] = train['LeadingClusterSecondLambda'] / 1000.  # Convert to GeV
+    train['NegativeE'] = train['NegativeE'] / 1000.  # Convert to GeV
+    
     train = train[train['OotFracClusters10'] > -0.1]
     train = train[train['OotFracClusters5'] > -0.1]
     train = train[train['LeadingClusterPt'] > 0]
@@ -581,6 +587,36 @@ def custom_unnormalize(normalized_data):
 
     return data
 
+boundDict = { #Min and Max Variable values for a filtered dataset of (sub)leading jets passing TLA cut
+'ActiveArea4vec_eta' : [-3.7, 3.7],
+'ActiveArea4vec_phi' : [-3.142, 3.142],
+'CentroidR' : [1646, 6040],
+'DetectorEta' : [-3.7, 3.7],
+'HECQuality' : [-2.5, 2.1],
+'LeadingClusterCenterLambda' : [0, 12900],
+'LeadingClusterPt' : [6, 1250],
+'LeadingClusterSecondLambda' : [0, 2200],
+'LeadingClusterSecondR' : [0, 1000],
+'N90Constituents' : [1, 32],
+'NegativeE' : [-220, 0],
+'Timing' : [-37, 34],
+'eta' : [-3.65, 3.6],
+'m' : [0, 300],
+'phi' : [-3.142, 3.142],
+'pt' : [0, 1700]
+}
+
+def interval_normalization(train, test, lower, upper): #Normalizing to either the unit interval/[-pi,pi]
+    train_cp = train.copy()
+    test_cp = test.copy()
+
+    for var in boundDict:
+        varMin = boundDict[var][0]
+        varMax = boundDict[var][1]
+        train_cp[var] = (1/(varMax - varMin)) * ((upper - lower) * train_cp[var] + varMax * lower - varMin * upper)
+        test_cp[var] = (1/(varMax - varMin)) *((upper- lower) * test_cp[var] + varMax * lower - varMin * upper)
+
+    return train_cp, test_cp
 
 def round_to_input(pred, uniques, variable):
     var = pred[variable].values.reshape(-1, 1)

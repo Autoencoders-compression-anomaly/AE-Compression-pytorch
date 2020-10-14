@@ -38,11 +38,11 @@ def getPred(data_str):
     columns = data.columns
 
     #Filter and normalize data
-    train = filter_jets(train)
-    test = filter_jets(test)
-    data = filter_jets(data)
+    train = min_filter_jets(train)
+    test = min_filter_jets(test)
+    data = min_filter_jets(data)
 
-    data.to_pickle(saveDir + 'TLAJets_test_filter.pkl') # To make sure that the jets are in the same order
+    data.to_pickle(saveDir + 'TLAJets_testing2_minFilter.pkl') # saving filtered version
     train, test = custom_normalization(train, test)
     #train, test = normalize(train, test)
     train_mean = train.mean()
@@ -75,8 +75,8 @@ def getPred(data_str):
     pred = pd.DataFrame(pred, columns=columns)
     pred = custom_unnormalize(pred)
 
-    pred.to_pickle(saveDir + 'pred_TLAJets_testing.pkl')
+    pred.to_pickle(saveDir + 'pred_TLAJets_testing2_minFilter.pkl')
 
 pathToData = '/afs/cern.ch/work/s/sarobert/autoencoders/processedData/'
-data_str = pathToData + 'TLAJets_testing.pkl'
+data_str = pathToData + 'TLAJets_testing2.pkl'
 getPred(data_str)

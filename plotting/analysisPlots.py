@@ -140,7 +140,7 @@ def makePlots():
             plt.axvline(x = -.5, color = 'forestgreen')
             plt.arrow(-.5, 100000, dx = -.15, dy = 0, width = .1, color='forestgreen')
         if labels[kk] == 'AverageLArQF':
-            plt.axvline(x = .8 * 65535, color = 'k')
+            plt.axvline(x = .8 * 65535, color = 'gray')
             plt.arrow(.8 * 65535, 10000, dx = 2000, dy = 0, width = .1, color='k')
         if labels[kk] == 'NegativeE':
             plt.axvline(x = -60, color = 'k')

@@ -110,6 +110,6 @@ def processTLA():
 
     print(partial_df.head())
     saveDir = '/afs/cern.ch/work/s/sarobert/autoencoders/processedData/'
-    partial_df.to_pickle(saveDir + 'TLAJets_testing.pkl')
+    partial_df.to_pickle(saveDir + 'TLAJets_testing2.pkl')
 
 processTLA()

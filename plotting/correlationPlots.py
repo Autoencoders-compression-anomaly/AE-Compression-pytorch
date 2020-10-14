@@ -79,16 +79,12 @@ def evaluateNetwork():
 
 def correlationPlots():
     makeCorner = False #Make corner plots
-    useNetwork = True #If using a network to make predictions
+    useNetwork = False #If using a network to make predictions
     curr_save_folder = '/eos/user/s/sarobert/TLAcorrelationPlots/'
+    pathToData = '/afs/cern.ch/work/s/sarobert/autoencoders/processedData/'
 
      # Figures setup
     plt.close('all')
-    unit_list = ['[GeV]', '[rad]', '[rad]', '[GeV]']
-    variable_list = [r'$p_T$', r'$\eta$', r'$\phi$', r'$E$']
-    line_style = ['--', '-']
-    colors = ['red', 'c']
-    markers = ['*', 's']
 
     # Histograms
     if useNetwork:
@@ -116,8 +112,12 @@ def correlationPlots():
 #        pred = pred.to_numpy()
 
     else:
-        data = pd.read_pickle(BIN + 'process_data/TLAJets.pkl')
+        data = pd.read_pickle(pathToData + 'TLAJets.pkl')
         columns = data.columns
+
+    data = filter_jets(data)
+    data, p = custom_normalization(data, data)
+    del p
 
     alph = 0.8
     n_bins = 80
@@ -126,7 +126,7 @@ def correlationPlots():
 
     plt.close('all')
     # Compute correlations
-    corr = res_df.corr()
+    corr = data.corr()
     print (corr)
     # Generate a mask for the upper triangle
     mask = np.zeros_like(corr, dtype=np.bool)
@@ -142,7 +142,7 @@ def correlationPlots():
                 square=True, linewidths=.5, cbar_kws={"shrink": .5})
     plt.subplots_adjust(left=.23, bottom=.30, top=.99, right=.99)
 
-    fig_name = 'TLAresidualsCorrelations.png'
+    fig_name = 'TLAnormCorrelations.png'
     plt.savefig(curr_save_folder + fig_name)
     
     if makeCorner:

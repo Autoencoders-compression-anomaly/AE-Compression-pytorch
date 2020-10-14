@@ -11,10 +11,10 @@ def varDistHists():
     #curr_save_folder = ''
 
     #Which plots to make
-    makeRaw = True
+    makeRaw = False
     makeFilter = False
     makeMin = False
-    makeNorm = False
+    makeNorm = True
     makeMinNorm = False
 
     #Set up figures
@@ -55,8 +55,19 @@ def varDistHists():
         minNormTrain, minNormTest = custom_normalization(minTrain, minTest)
         dataMinNorm = pd.concat([minNormTrain, minNormTest]).to_numpy()
 
+    limitsDict = { #Cut thresholds for filtering scheme
+            'EMFrac' : [-5, 5],
+            'OotFracClusters5' : [-.1],
+            'OotFracClusters10' : [-.1],
+            'Width' : [-5, 5],
+            'WidthPhi' : [-5, 5],
+            'Timing' : [-125, 125],
+            'LArQuality' : [4],
+            'HECQuality' : [-2.5, 2.5],
+            'NegativeE' : [-300000]
+        }
     
-    #RawDistributions I apologize for the spaghetti
+    #RawDistributions 
     if makeRaw:
         for kk in np.arange(27):
             plt.figure()
@@ -98,6 +109,14 @@ def varDistHists():
             #if labels[kk] == 'LArQuality':
             #    plt.axvline(x=.8, color='red')
             #    plt.arrow(.8, 100000, dx = .15, dy = 0, width = .1, color='red')
+            try:
+                try:
+                    plt.axvline(x=limitsDict[labels[kk]][0], color = 'black')
+                    plt.axvline(x=limitsDict[labels[kk]][1], color = 'black')
+                except:
+                    plt.axvline(x=limitsDict[labels[kk]][0], color = 'black')
+            except:
+                pass
             plt.xlabel(labels[kk])
             plt.ylabel('Number of events')
             plt.yscale('log')
@@ -105,19 +124,7 @@ def varDistHists():
             plt.savefig(curr_save_folder + fig_name)
             plt.close('all')
 
-    if makeFilter:
-        limitsDict = {
-            'EMFrac' : [-5, 5],
-            'OotFracClusters5' : [-.1], 
-            'OotFracClusters10' : [-.1],
-            'Width' : [-5, 5],
-            'WidthPhi' : [-5, 5],
-            'Timing' : [-125, 125],
-            'LArQuality' : [4],
-            'HECQuality' : [-2.5, 2.5],
-            'NegativeE' : [-300, 300]
-        }
-    
+    if makeFilter:    
         #Distributions after filtering
         for kk in np.arange(27):
             plt.figure()
@@ -183,10 +190,10 @@ def varDistHists():
             n_hist_data, bin_edges, _ = plt.hist(dataNorm[:, kk], color=colors[1], label='Input', alpha=1, bins=n_bins)
             try:
                 try:
-                    plt.axvline(x=limitsDict[labels[kk]][0], color = 'black')
-                    plt.axvline(x=limitsDict[labels[kk]][1], color = 'black')
+                    plt.axvline(x=normLimitsDict[labels[kk]][0], color = 'black')
+                    plt.axvline(x=normLimitsDict[labels[kk]][1], color = 'black')
                 except:
-                    plt.axvline(x=limitsDict[labels[kk]][0], color = 'black')
+                    plt.axvline(x=normLimitsDict[labels[kk]][0], color = 'black')
             except:
                 pass
             plt.suptitle(labels[kk])
