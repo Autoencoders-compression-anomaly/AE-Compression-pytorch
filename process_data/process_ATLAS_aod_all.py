@@ -32,6 +32,9 @@ branchnames = [
     prefix + '.m',
     ]
 
+#this is if you only want the leading jet, or all jets - the example works with leading jet only...
+leading_only = True
+
 extraBranchNames = [
     # Energy deposition in each calorimeter layer
     # prefix + '.EnergyPerSampling',
@@ -108,6 +111,7 @@ for branchname in branchnames:
         for event_entry in branch_array :
             for jet_entry in event_entry :
                 df_dict[variable].append(jet_entry)
+                if (leading_only) : break
 
 #make a dataFrame out of the dictionary for easier splitting into train/test
 print('Creating DataFrame...')
@@ -121,5 +125,5 @@ print('Creating DataFrame...')
 print(partial_df.head)
 print(partial_df.columns)
 
-partial_train.to_pickle(path_to_data+'TLA_jets_train_80.pkl')
-partial_test.to_pickle(path_to_data+'TLA_jets_test_20.pkl')
+partial_train.to_pickle(path_to_data+'TLA_leadingJet_train_80.pkl')
+partial_test.to_pickle(path_to_data+'TLA_leadingJet_test_20.pkl')

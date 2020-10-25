@@ -28,7 +28,7 @@ def filter_unitconvert_jets_4D(train):
     train['pt'] = train['pt'] / 1000.  # Convert to GeV
     train['m'] = train['m'] / 1000.  # Convert to GeV
     # Remove all jets with mass <= 0 (arbitrarily close-to-zero)
-    train = train[(np.abs(train['m']) < 0.000000001)]
+    train = train[(np.abs(train['m']) > 0.000000001)]
     return train
 
 def filter_jets(train):

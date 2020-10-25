@@ -8,10 +8,10 @@ import pandas as pd
 import utils.processing_ATLASData_utils as utils
 
 #Here you should have the files that you produced using the process_ATLAS_aod_all.py script
-train = pd.read_pickle('../../../ATLAS_datasets/TLA_jets_train_80.pkl')
+train = pd.read_pickle('../../../ATLAS_datasets/TLA_leadingJet_train_80.pkl')
 original_train_shape = train.shape
 print('Original train.shape:', original_train_shape)
-test = pd.read_pickle('../../../ATLAS_datasets/TLA_jets_test_20.pkl')
+test = pd.read_pickle('../../../ATLAS_datasets/TLA_leadingJet_test_20.pkl')
 
 # Remove extreme/bad jets, if any (the 4D version just removes massless jets)
 train = utils.filter_unitconvert_jets_4D(train)
@@ -19,9 +19,8 @@ test = utils.filter_unitconvert_jets_4D(test)
 
 print(train.shape)
 
-print('Number of jets excluded:')
-print(original_train_shape[0] - train.shape[0])
-print((original_train_shape[0] - train.shape[0]) / train.shape[0])
+print('Number of jets excluded:', original_train_shape[0] - train.shape[0])
+print('Equivalent to:', 100*(original_train_shape[0] - train.shape[0]) / train.shape[0], '%')
 
 print('New train.head() after cleaning:')
 print(train.head())
@@ -38,5 +37,5 @@ print(custom_normalized_train.head())
 print('New test.head() after normalization:')
 print(custom_normalized_test.head())
 
-custom_normalized_train.to_pickle('../../../ATLAS_datasets/TLA_jets_custom_normalized_train_80.pkl')
-custom_normalized_test.to_pickle('../../../ATLAS_datasets/TLA_jets_custom_normalized_train_20.pkl')
+custom_normalized_train.to_pickle('../../../ATLAS_datasets/TLA_leadingJet_custom_normalized_train_80.pkl')
+custom_normalized_test.to_pickle('../../../ATLAS_datasets/TLA_leadingJet_custom_normalized_train_20.pkl')
