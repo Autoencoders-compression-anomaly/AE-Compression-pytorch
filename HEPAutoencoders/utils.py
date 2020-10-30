@@ -341,36 +341,9 @@ def replaceline_and_save(fname, findln, newline, override=False):
         fid.writelines(lines)
 
 
-# Custom normalization for AOD data
-eta_div = 5
-emfrac_div = 1.6
-negE_div = 1.6
-phi_div = 3
-m_div = 1.8
-width_div = .6
-N90_div = 20
-timing_div = 40
-hecq_div = 1
-centerlambda_div = 2
-secondlambda_div = 1
-secondR_div = .6
-larqf_div = 2.5
-pt_div = 1.2
-centroidR_div = 0.8
-area4vecm_div = 0.18
-area4vecpt_div = 0.7
-area4vec_div = 0.8
-Oot_div = 0.3
-larq_div = 0.6
-
-log_add = 100
-log_sub = 2
-m_add = 1
-centroidR_sub = 3
-pt_sub = 1.3
-area4vecm_sub = 0.15
 
 
+###MIGRATED TO utils/processing_utils.py
 def filter_jets(train):
     train['pt'] = train['pt'] / 1000.  # Convert to GeV
     train['m'] = train['m'] / 1000.  # Convert to GeV
@@ -406,7 +379,7 @@ def filter_jets(train):
 
     return train
 
-
+###MIGRATED TO utils/processing_utils.py
 def unit_convert_jets(leading, subleading):
     leading_orig = leading.copy()
     leading['pt'] = leading['pt'] / 1000.  # Convert to GeV
@@ -494,7 +467,7 @@ def filter_mc_jets(leading, subleading):
 
     return leading, subleading
 
-
+###MIGRATED TO utils/processing_utils.py
 def custom_normalization(train, test):
     train_cp = train.copy()
     test_cp = test.copy()
@@ -536,7 +509,7 @@ def custom_normalization(train, test):
 
     return train_cp, test_cp
 
-
+###MIGRATED TO utils/processing_utils.py
 def custom_unnormalize(normalized_data):
     data = normalized_data.copy()
     data['DetectorEta'] = data['DetectorEta'] * eta_div
