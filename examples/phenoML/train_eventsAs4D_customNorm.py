@@ -13,7 +13,8 @@ import torch
 import torch.nn as nn
 import torch.utils.data
 
-from torch.utils.data import TensorDataset
+from torch.utils.data import TensorDataset, DataLoader
+
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 #from fastai.callbacks.tracker import SaveModelCallback
@@ -26,6 +27,8 @@ from sklearn.model_selection import train_test_split
 
 from fastai import learner
 from fastai.data import core
+from fastai.metrics import mse
+from fastai.callback import schedule
 
 #from HEPAutoencoders.utils import plot_activations
 from HEPAutoencoders.nn_utils import get_data, RMSELoss
@@ -132,6 +135,31 @@ def train_and_save(model, epochs, lr, wd, pp, module_string, save_dict, ct, path
     with open(curr_save_folder + 'summary.txt', 'w') as f:
         f.write('%s Minimum validation loss: %e epoch: %d lr: %.1e wd: %.1e p: %s Training time: %s\n' % (module_string, min_val_loss, min_epoch, lr, wd, pp, time_string))
 
+class AE_3D_200_LeakyReLU(nn.Module):
+    def __init__(self, feature_no=4):
+        super(AE_3D_200_LeakyReLU, self).__init__()
+        #self.tanh = nn.Tanh()
+        self.enc_l1 = nn.Linear(feature_no, 200)
+        self.enc_l2 = nn.Linear(200, 200)
+        self.enc_l3 = nn.Linear(200, 20)
+        self.latent = nn.Linear(20, 3)
+        self.dec_l1 = nn.Linear(3, 20)
+        self.dec_l2 = nn.Linear(20, 200)
+        self.dec_l3 = nn.Linear(200, 200)
+        self.output = nn.Linear(200, feature_no)
+        self.tanh = nn.Tanh()
+
+    def encode(self, x):
+        return self.latent(self.tanh(self.enc_l3(self.tanh(self.enc_l2(self.tanh(self.enc_l1(x)))))))
+
+    def decode(self, x):
+        return self.output(self.tanh(self.dec_l3(self.tanh(self.dec_l2(self.tanh(self.dec_l1(x)))))))
+
+    def forward(self, x):
+        return self.decode(self.encode(x))
+
+    def describe(self):
+        return 'in-200-200-20-3-20-200-200-out'
 
 def main():
     # define variables
@@ -144,6 +172,7 @@ def main():
     one_module = AE_bn_LeakyReLU
     continue_training = False
     checkpoint_name = 'nn_utils_bs1024_lr1e-04_wd1e-02_ppNA'
+    recorder = learner.Recorder()
 
     # check if GPU is available
     if torch.cuda.is_available():
@@ -194,19 +223,37 @@ def main():
     valid_ds = TensorDataset(torch.tensor(test.values, dtype=torch.float), torch.tensor(test.values, dtype=torch.float))
 
     # Create DataLoaders
-    train_dl, valid_dl = get_data(train_ds, valid_ds, bs=bs)
+    train_dl = DataLoader(train_ds, batch_size=bs, shuffle=True)
+    valid_dl = DataLoader(valid_ds, batch_size=bs * 2)
+    #train_dl, valid_dl = get_data(train_ds, valid_ds, bs=bs)
 
     # Return DataBunch
-    db = core.DataLoader(train_dl, valid_dl)
+    db = core.DataLoaders(train_dl, valid_dl)
 
-    tic = time.time()
-    one_run(one_module, one_epochs, one_lr, one_wd, one_pp, continue_training, train.shape[-1], checkpoint_name, bs, db, loss_func)
-    toc = time.time()
+    model = AE_3D_200_LeakyReLU()
+    model.to('cpu')
+    print(model)
 
-    time_taken = (toc-tic)/60.0
+    learn = learner.Learner(db, model=model, wd=one_wd, loss_func=loss_func, cbs=recorder)
 
-    print('Total time taken: ', time_taken , 'minutes')
-    print('Time taken per epoch: ', time_taken / one_epochs, 'minutes')
+    min_lr, steepest_lr = learn.lr_find()
+
+    start_tr = time.perf_counter()
+    learn.fit_one_cycle(one_epochs, steepest_lr)
+    end_tr = time.perf_counter()
+    time_tr = end_tr - start_tr
+    print('Training lasted for {} seconds'.format(time_tr))
+
+    learn.validate()
+
+    #tic = time.time()
+    #one_run(one_module, one_epochs, one_lr, one_wd, one_pp, continue_training, train.shape[-1], checkpoint_name, bs, db, loss_func)
+    #toc = time.time()
+
+    #time_taken = (toc-tic)/60.0
+
+    #print('Total time taken: ', time_taken , 'minutes')
+    #print('Time taken per epoch: ', time_taken / one_epochs, 'minutes')
 
 if __name__=='__main__':
     main()
