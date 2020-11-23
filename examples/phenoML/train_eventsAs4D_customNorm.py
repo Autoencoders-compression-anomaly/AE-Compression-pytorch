@@ -48,17 +48,26 @@ class AE_3D_200_LeakyReLU(nn.Module):
     def describe(self):
         return 'in-200-200-20-3-20-200-200-out'
 
+def custom_normalise(df):
+    # Convert dataset items into floats
+    df = df.astype('float32')
+
+    # Custom normalize dataset
+    df['E'] = df['E'] / 1000.0
+    df['pt'] = df['pt'] / 1000.0
+
+    df['eta'] = df['eta'] / 5 
+    df['phi'] = df['phi'] / 3
+    df['E'] = np.log10(df['E'])
+    df['pt'] = np.log10(df['pt'])
+    return df
+
 def main():
     # define variables
     bs = 8192
     loss_func = nn.MSELoss()
-    one_epochs = 100
-    one_lr = 1e-4
-    one_wd = 1e-2
-    one_pp = None
-    one_module = AE_bn_LeakyReLU
-    continue_training = False
-    checkpoint_name = 'nn_utils_bs1024_lr1e-04_wd1e-02_ppNA'
+    one_epochs = 10
+    wd = 1e-2
     recorder = learner.Recorder()
 
     # check if GPU is available
@@ -79,25 +88,9 @@ def main():
     train = pd.read_pickle('/nfs/atlas/mvaskev/sm/processed_4D_ttbar_10fb_events_with_only_jet_particles_4D_train.pkl')
     test = pd.read_pickle('/nfs/atlas/mvaskev/sm/processed_4D_ttbar_10fb_events_with_only_jet_particles_4D_test.pkl')
 
-    # Convert dataset items into floats
-    train = train.astype('float32')
-    test = test.astype('float32')
-
-    # Custom normalize training and testing data sets
-    train['E'] = train['E'] / 1000.0
-    train['pt'] = train['pt'] / 1000.0
-    test['E'] = test['E'] / 1000.0
-    test['pt'] = test['pt'] / 1000.0
-
-    train['eta'] = train['eta'] / 5
-    train['phi'] = train['phi'] / 3
-    train['E'] = np.log10(train['E']) 
-    train['pt'] = np.log10(train['pt'])
-
-    test['eta'] = test['eta'] / 5
-    test['phi'] = test['phi'] / 3
-    test['E'] = np.log10(test['E']) 
-    test['pt'] = np.log10(test['pt'])
+    # Custom normalise training and testing datasets
+    train = custom_normalise(train)
+    test = custom_normalise(test)
 
     # Create TensorDatasets
     train_ds = TensorDataset(torch.tensor(train.values, dtype=torch.float), torch.tensor(train.values, dtype=torch.float))
@@ -114,7 +107,7 @@ def main():
     model.to('cpu')
     print(model)
 
-    learn = learner.Learner(db, model=model, wd=one_wd, loss_func=loss_func, cbs=recorder)
+    learn = learner.Learner(db, model=model, wd=wd, loss_func=loss_func, cbs=recorder)
 
     min_lr, steepest_lr = learn.lr_find()
 
