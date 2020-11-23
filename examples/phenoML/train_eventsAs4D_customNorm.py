@@ -7,7 +7,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import pickle
 import time
-import datetime
 
 import torch
 import torch.nn as nn
@@ -15,31 +14,19 @@ import torch.utils.data
 
 from torch.utils.data import TensorDataset, DataLoader
 
-from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
-#from fastai.callbacks.tracker import SaveModelCallback
-
-#import fastai
-#from fastai import train as tr
-#from fastai import basic_train, basic_data
-#from fastai.callbacks import ActivationStats
-#from fastai import data_block, basic_train, basic_data
 
 from fastai import learner
 from fastai.data import core
 from fastai.metrics import mse
 from fastai.callback import schedule
 
-#from HEPAutoencoders.utils import plot_activations
-from HEPAutoencoders.nn_utils import get_data, RMSELoss
 from HEPAutoencoders.nn_utils import AE_basic, AE_bn, AE_LeakyReLU, AE_bn_LeakyReLU, AE_big, AE_3D_50, AE_3D_50_bn_drop, AE_3D_50cone, AE_3D_100, AE_3D_100_bn_drop, AE_3D_100cone_bn_drop, AE_3D_200, AE_3D_200_bn_drop, AE_3D_500cone_bn, AE_3D_500cone_bn
-
-import matplotlib as mpl
 
 class AE_3D_200_LeakyReLU(nn.Module):
     def __init__(self, feature_no=4):
         super(AE_3D_200_LeakyReLU, self).__init__()
-        #self.tanh = nn.Tanh()
+        self.tanh = nn.Tanh()
         self.enc_l1 = nn.Linear(feature_no, 200)
         self.enc_l2 = nn.Linear(200, 200)
         self.enc_l3 = nn.Linear(200, 20)
@@ -48,7 +35,6 @@ class AE_3D_200_LeakyReLU(nn.Module):
         self.dec_l2 = nn.Linear(20, 200)
         self.dec_l3 = nn.Linear(200, 200)
         self.output = nn.Linear(200, feature_no)
-        self.tanh = nn.Tanh()
 
     def encode(self, x):
         return self.latent(self.tanh(self.enc_l3(self.tanh(self.enc_l2(self.tanh(self.enc_l1(x)))))))
