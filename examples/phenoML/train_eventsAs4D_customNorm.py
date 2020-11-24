@@ -23,6 +23,19 @@ sys.path.append(str(Path(os.getcwd()).parent.parent))
 
 from HEPAutoencoders.nn_utils import AE_basic, AE_bn, AE_LeakyReLU, AE_bn_LeakyReLU, AE_big, AE_3D_50, AE_3D_50_bn_drop, AE_3D_50cone, AE_3D_100, AE_3D_100_bn_drop, AE_3D_100cone_bn_drop, AE_3D_200, AE_3D_200_bn_drop, AE_3D_500cone_bn, AE_3D_500cone_bn
 
+def args_parser():
+    parser = argparse.ArgumentParser(description='Run autoencoder over full train-test cycle')
+    required = parser.add_argument_group('required named arguments')
+    required.add_argument('-tr', '--train', nargs='?', required=True,
+                          const='/nfs/atlas/mvaskev/sm/processed_4D_ttbar_10fb_events_with_only_jet_particles_4D.pkl',
+                          help='global path to training data file; must be in pickle (.pkl) format')
+    required.add_argument('-t', '--test', nargs='?', required=True,
+                          const='/nfs/atlas/mvaskev/sm/processed_4D_z_jets_10fb_events_with_only_jet_particles_4D.pkl',
+                          help='global path to testing data file; must be in pickle (.pkl) format')
+    parser.add_argument('-p', '--plot', default=False, action='store_true',
+                          help='choose to attempt saving of loss optimisation and training loss plots')
+    return parser.parse_args()
+
 class AE_3D_200_LeakyReLU(nn.Module):
     def __init__(self, feature_no=4):
         super(AE_3D_200_LeakyReLU, self).__init__()
@@ -74,19 +87,6 @@ def plot(data_in, data_out, col_names):
         plt.legend()
         plt.savefig('plts/comparison_{}.png'.format(str(col_names[col])))
         plt.close()
-
-def args_parser():
-    parser = argparse.ArgumentParser(description='Run autoencoder over full train-test cycle')
-    required = parser.add_argument_group('required named arguments')
-    required.add_argument('-tr', '--train', nargs='?', required=True,
-                          const='/nfs/atlas/mvaskev/sm/processed_4D_ttbar_10fb_events_with_only_jet_particles_4D.pkl', 
-                          help='global path to training data file; must be in pickle (.pkl) format')
-    required.add_argument('-t', '--test', nargs='?', required=True, 
-                          const='/nfs/atlas/mvaskev/sm/processed_4D_z_jets_10fb_events_with_only_jet_particles_4D.pkl', 
-                          help='global path to testing data file; must be in pickle (.pkl) format')
-    parser.add_argument('-p', '--plot', default=False, action='store_true',
-                          help='choose to attempt saving of loss optimisation and training loss plots')
-    return parser.parse_args()
 
 def main():
     # Parse command line arguments
