@@ -58,15 +58,43 @@ def custom_normalise(df):
 
     df['eta'] = df['eta'] / 5 
     df['phi'] = df['phi'] / 3
+
     df['E'] = np.log10(df['E'])
     df['pt'] = np.log10(df['pt'])
     return df
+
+def custom_unnormalise(df):
+    # Convert dataset items into floats
+    df = df.astype('float32')
+
+    # Undo custom normalisation
+    df['E'] = 10**df['E']
+    df['pt'] = 10**df['pt']
+
+    df['eta'] = df['eta'] * 5
+    df['phi'] = df['phi'] * 3
+
+    df['E'] = df['E'] * 1000.0
+    df['pt'] = df['pt'] * 1000.0
+    return df
+
+def plot(data_in, data_out, col_names):
+    for col in np.arange(4):
+        plt.figure()
+        plt.hist(data_in[:, col], label='Input', bins=200, alpha=1, histtype='step')
+        plt.hist(data_out[: , col], label='Output', bins=200, alpha=0.8, histtype='step')
+        plt.xlabel(str(col_names[col]))
+        plt.ylabel('Number')
+        plt.yscale('log')
+        plt.legend()
+        plt.savefig('plts/comparison_{}.png'.format(str(col_names[col])))
+        plt.close()
 
 def main():
     # define variables
     bs = 8192
     loss_func = nn.MSELoss()
-    one_epochs = 10
+    one_epochs = 30
     wd = 1e-2
     recorder = learner.Recorder()
 
@@ -76,25 +104,28 @@ def main():
         print('Using GPU for training')
 
     # Get data from pkl file (change to point to the file location)
-    global_path = '/nfs/atlas/mvaskev/sm/processed_4D_ttbar_10fb_events_with_only_jet_particles_4D.pkl'
-    data = pd.read_pickle(global_path)
+    train_path = '/nfs/atlas/mvaskev/sm/processed_4D_ttbar_10fb_events_with_only_jet_particles_4D.pkl'
+    data = pd.read_pickle(train_path)
+    test_path = '/nfs/atlas/mvaskev/sm/processed_4D_z_jets_10fb_events_with_only_jet_particles_4D.pkl'
+    test = pd.read_pickle(test_path)
 
-    # Split into training and testing datasets
-    train, test = train_test_split(data, test_size=0.2, random_state=41)
-    # Store split training and testing sets (change to point to your location)
+    # Split into training and validation datasets
+    train, valid = train_test_split(data, test_size=0.2, random_state=41)
+    # Store split training and validation sets (change to point to your location)
     train.to_pickle('/nfs/atlas/mvaskev/sm/processed_4D_ttbar_10fb_events_with_only_jet_particles_4D_train.pkl')
-    test.to_pickle('/nfs/atlas/mvaskev/sm/processed_4D_ttbar_10fb_events_with_only_jet_particles_4D_test.pkl')
+    valid.to_pickle('/nfs/atlas/mvaskev/sm/processed_4D_ttbar_10fb_events_with_only_jet_particles_4D_test.pkl')
     # Read the datasets into pandas DataFrame
     train = pd.read_pickle('/nfs/atlas/mvaskev/sm/processed_4D_ttbar_10fb_events_with_only_jet_particles_4D_train.pkl')
-    test = pd.read_pickle('/nfs/atlas/mvaskev/sm/processed_4D_ttbar_10fb_events_with_only_jet_particles_4D_test.pkl')
+    valid = pd.read_pickle('/nfs/atlas/mvaskev/sm/processed_4D_ttbar_10fb_events_with_only_jet_particles_4D_test.pkl')
 
     # Custom normalise training and testing datasets
     train = custom_normalise(train)
+    valid = custom_normalise(valid)
     test = custom_normalise(test)
 
     # Create TensorDatasets
     train_ds = TensorDataset(torch.tensor(train.values, dtype=torch.float), torch.tensor(train.values, dtype=torch.float))
-    valid_ds = TensorDataset(torch.tensor(test.values, dtype=torch.float), torch.tensor(test.values, dtype=torch.float))
+    valid_ds = TensorDataset(torch.tensor(valid.values, dtype=torch.float), torch.tensor(valid.values, dtype=torch.float))
 
     # Create DataLoaders
     train_dl = DataLoader(train_ds, batch_size=bs, shuffle=True)
@@ -105,11 +136,13 @@ def main():
 
     model = AE_3D_200_LeakyReLU()
     model.to('cpu')
-    print(model)
 
     learn = learner.Learner(db, model=model, wd=wd, loss_func=loss_func, cbs=recorder)
 
     min_lr, steepest_lr = learn.lr_find()
+
+    print('Minimum loss learning rate {}'.format(min_lr))
+    print('Steepest loss drop learning rate {}'.format(steepest_lr))
 
     start_tr = time.perf_counter()
     learn.fit_one_cycle(one_epochs, steepest_lr)
@@ -117,7 +150,14 @@ def main():
     time_tr = end_tr - start_tr
     print('Training lasted for {} seconds'.format(time_tr))
 
-    print('MSE on test set is {}'.format(learn.validate()))
+    print('MSE on validation set is {}'.format(learn.validate()))
+
+    data = torch.tensor(test.values, dtype=torch.float)
+    predictions = model(data)
+    data = data.detach().numpy()
+    predictions = predictions.detach().numpy()
+
+    plot(data, predictions, test.columns)
 
 if __name__=='__main__':
     main()
