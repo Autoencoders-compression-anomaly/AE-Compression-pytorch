@@ -1,7 +1,5 @@
 import sys
-BIN = '/home/ppe/m/mvaskev/'
-sys.path.append(BIN + 'AE-Compression-pytorch/')
-import os.path
+import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -20,6 +18,11 @@ from fastai import learner
 from fastai.data import core
 from fastai.metrics import mse
 from fastai.callback import schedule
+
+from pathlib import Path
+
+# Need this to be able to access HEPAutoencoder library
+sys.path.append(str(Path(os.getcwd()).parent.parent))
 
 from HEPAutoencoders.nn_utils import AE_basic, AE_bn, AE_LeakyReLU, AE_bn_LeakyReLU, AE_big, AE_3D_50, AE_3D_50_bn_drop, AE_3D_50cone, AE_3D_100, AE_3D_100_bn_drop, AE_3D_100cone_bn_drop, AE_3D_200, AE_3D_200_bn_drop, AE_3D_500cone_bn, AE_3D_500cone_bn
 
