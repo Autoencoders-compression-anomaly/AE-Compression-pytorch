@@ -118,29 +118,33 @@ def main():
     # Return DataBunch
     db = core.DataLoaders(train_dl, valid_dl)
 
+    # Model set-up
     model = AE_3D_200_LeakyReLU()
     model.to('cpu')
-
     learn = learner.Learner(db, model=model, wd=wd, loss_func=loss_func, cbs=recorder)
 
+    # Get learning rates at minimum and steepest decrease losses
     min_lr, steepest_lr = learn.lr_find()
-
     print('Minimum loss learning rate {}'.format(min_lr))
     print('Steepest loss drop learning rate {}'.format(steepest_lr))
 
+    # Fit model
     start_tr = time.perf_counter()
     learn.fit_one_cycle(one_epochs, steepest_lr)
     end_tr = time.perf_counter()
     time_tr = end_tr - start_tr
     print('Training lasted for {} seconds'.format(time_tr))
 
+    # Get final validation loss
     print('MSE on validation set is {}'.format(learn.validate()))
-
+    
+    # Make predictions
     data = torch.tensor(test.values, dtype=torch.float)
     predictions = model(data)
     data = data.detach().numpy()
     predictions = predictions.detach().numpy()
 
+    # Plot results
     plot(data, predictions, test.columns)
 
 if __name__=='__main__':
