@@ -5,20 +5,16 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import pickle
 import time
-
 import torch
 import torch.nn as nn
 import torch.utils.data
 
 from torch.utils.data import TensorDataset, DataLoader
-
 from sklearn.model_selection import train_test_split
-
 from fastai import learner
 from fastai.data import core
 from fastai.metrics import mse
 from fastai.callback import schedule
-
 from pathlib import Path
 
 # Need this to be able to access HEPAutoencoder library
@@ -64,21 +60,6 @@ def custom_normalise(df):
 
     df['E'] = np.log10(df['E'])
     df['pt'] = np.log10(df['pt'])
-    return df
-
-def custom_unnormalise(df):
-    # Convert dataset items into floats
-    df = df.astype('float32')
-
-    # Undo custom normalisation
-    df['E'] = 10**df['E']
-    df['pt'] = 10**df['pt']
-
-    df['eta'] = df['eta'] * 5
-    df['phi'] = df['phi'] * 3
-
-    df['E'] = df['E'] * 1000.0
-    df['pt'] = df['pt'] * 1000.0
     return df
 
 def plot(data_in, data_out, col_names):
