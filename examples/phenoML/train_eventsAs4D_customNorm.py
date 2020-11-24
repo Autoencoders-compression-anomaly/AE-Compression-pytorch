@@ -1,3 +1,4 @@
+import argparse
 import sys
 import os
 import numpy as np
@@ -74,8 +75,35 @@ def plot(data_in, data_out, col_names):
         plt.savefig('plts/comparison_{}.png'.format(str(col_names[col])))
         plt.close()
 
+def args_parser():
+    parser = argparse.ArgumentParser(description='Run autoencoder over full train-test cycle')
+    required = parser.add_argument_group('required named arguments')
+    required.add_argument('-tr', '--train', nargs='?', required=True,
+                          const='/nfs/atlas/mvaskev/sm/processed_4D_ttbar_10fb_events_with_only_jet_particles_4D.pkl', 
+                          help='global path to training data file; must be in pickle (.pkl) format')
+    required.add_argument('-t', '--test', nargs='?', required=True, 
+                          const='/nfs/atlas/mvaskev/sm/processed_4D_z_jets_10fb_events_with_only_jet_particles_4D.pkl', 
+                          help='global path to testing data file; must be in pickle (.pkl) format')
+    parser.add_argument('-p', '--plot', default=False, action='store_true',
+                          help='choose to attempt saving of loss optimisation and training loss plots')
+    return parser.parse_args()
+
 def main():
-    # define variables
+    # Parse command line arguments
+    args = args_parser()
+    loss_plot = args.plot
+    train_path, test_path = args.train, args.test
+    # Check that training and testing datasets are formatted correctly
+    train_filename, train_extension = os.path.splitext(train_path)
+    if (train_extension != '.pkl' or os.path.splitext(test_path)[1] != '.pkl'):
+        print('Invalid file type: Training and testing datasets must be in pickle (.pkl) format.')
+        return 1
+    else:
+        # Define files where training set split into training and validation will be stored
+        train_split_path = train_filename + '_train' + train_extension
+        valid_split_path = train_filename + '_valid' + train_extension
+
+    # Define variables
     bs = 8192
     loss_func = nn.MSELoss()
     one_epochs = 30
@@ -87,20 +115,18 @@ def main():
         fastai.torch_core.defaults.device = 'cuda'
         print('Using GPU for training')
 
-    # Get data from pkl file (change to point to the file location)
-    train_path = '/nfs/atlas/mvaskev/sm/processed_4D_ttbar_10fb_events_with_only_jet_particles_4D.pkl'
+    # Get data from pkl file
     data = pd.read_pickle(train_path)
-    test_path = '/nfs/atlas/mvaskev/sm/processed_4D_z_jets_10fb_events_with_only_jet_particles_4D.pkl'
     test = pd.read_pickle(test_path)
 
     # Split into training and validation datasets
     train, valid = train_test_split(data, test_size=0.2, random_state=41)
     # Store split training and validation sets (change to point to your location)
-    train.to_pickle('/nfs/atlas/mvaskev/sm/processed_4D_ttbar_10fb_events_with_only_jet_particles_4D_train.pkl')
-    valid.to_pickle('/nfs/atlas/mvaskev/sm/processed_4D_ttbar_10fb_events_with_only_jet_particles_4D_test.pkl')
+    train.to_pickle(train_split_path)
+    valid.to_pickle(valid_split_path)
     # Read the datasets into pandas DataFrame
-    train = pd.read_pickle('/nfs/atlas/mvaskev/sm/processed_4D_ttbar_10fb_events_with_only_jet_particles_4D_train.pkl')
-    valid = pd.read_pickle('/nfs/atlas/mvaskev/sm/processed_4D_ttbar_10fb_events_with_only_jet_particles_4D_test.pkl')
+    train = pd.read_pickle(train_split_path)
+    valid = pd.read_pickle(valid_split_path)
 
     # Custom normalise training and testing datasets
     train = custom_normalise(train)
@@ -125,6 +151,9 @@ def main():
 
     # Get learning rates at minimum and steepest decrease losses
     min_lr, steepest_lr = learn.lr_find()
+    if loss_plot:
+        learn.recorder.plot_lr_find().savefig('plts/loss_optimisation.png')
+        plt.close('all')
     print('Minimum loss learning rate {}'.format(min_lr))
     print('Steepest loss drop learning rate {}'.format(steepest_lr))
 
@@ -134,6 +163,9 @@ def main():
     end_tr = time.perf_counter()
     time_tr = end_tr - start_tr
     print('Training lasted for {} seconds'.format(time_tr))
+
+    if loss_plot:
+        learn.recorder.plot_loss().savefig('plts/training_loss.png')
 
     # Get final validation loss
     print('MSE on validation set is {}'.format(learn.validate()))
