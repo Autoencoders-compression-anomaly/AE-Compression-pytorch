@@ -23,20 +23,11 @@ sys.path.append(str(Path(os.getcwd()).parent.parent))
 
 from HEPAutoencoders.nn_utils import AE_basic, AE_bn, AE_LeakyReLU, AE_bn_LeakyReLU, AE_big, AE_3D_50, AE_3D_50_bn_drop, AE_3D_50cone, AE_3D_100, AE_3D_100_bn_drop, AE_3D_100cone_bn_drop, AE_3D_200, AE_3D_200_bn_drop, AE_3D_500cone_bn, AE_3D_500cone_bn
 
-def args_parser():
-    parser = argparse.ArgumentParser(description='Run autoencoder over full train-test cycle')
-    required = parser.add_argument_group('required named arguments')
-    required.add_argument('-tr', '--train', nargs='?', required=True,
-                          const='/nfs/atlas/mvaskev/sm/processed_4D_ttbar_10fb_events_with_only_jet_particles_4D.pkl',
-                          help='global path to training data file; must be in pickle (.pkl) format')
-    required.add_argument('-t', '--test', nargs='?', required=True,
-                          const='/nfs/atlas/mvaskev/sm/processed_4D_z_jets_10fb_events_with_only_jet_particles_4D.pkl',
-                          help='global path to testing data file; must be in pickle (.pkl) format')
-    parser.add_argument('-p', '--plot', default=False, action='store_true',
-                          help='choose to attempt saving of loss optimisation and training loss plots')
-    return parser.parse_args()
-
+# Class describing autoencoder model object
 class AE_3D_200_LeakyReLU(nn.Module):
+    # Initialise autoencoder object
+    # Arguments:
+    #     feature_no: number of input (and thus output) vector
     def __init__(self, feature_no=4):
         super(AE_3D_200_LeakyReLU, self).__init__()
         self.tanh = nn.Tanh()
@@ -49,18 +40,50 @@ class AE_3D_200_LeakyReLU(nn.Module):
         self.dec_l3 = nn.Linear(200, 200)
         self.output = nn.Linear(200, feature_no)
 
+    # Function encodes vector to a latent space
+    # Arguments:
+    #     x: indexable object representing a vector to be encoded
     def encode(self, x):
         return self.latent(self.tanh(self.enc_l3(self.tanh(self.enc_l2(self.tanh(self.enc_l1(x)))))))
 
+    # Function decodes latent space representation to initial vector representation
+    # Arguments:
+    #     x: indexable object representing a latent space representation of a vector
     def decode(self, x):
         return self.output(self.tanh(self.dec_l3(self.tanh(self.dec_l2(self.tanh(self.dec_l1(x)))))))
 
+    # Function runs full encoder-decoder cycle
+    # Arguments:
+    #     x: indexable object representing input vector
     def forward(self, x):
         return self.decode(self.encode(x))
 
+    # Function describes autoencoder structure
     def describe(self):
         return 'in-200-200-20-3-20-200-200-out'
 
+# Function for parsing command line arguments
+# Returns: composite Object containing command line argument
+def args_parser():
+    parser = argparse.ArgumentParser(description='Run autoencoder over full train-test cycle')
+    # User must provide arguments for training and testing datasets
+    required = parser.add_argument_group('required named arguments')
+    # If only flag is given, const value of each argument will be used
+    required.add_argument('-tr', '--train', nargs='?', required=True,
+                          const='/nfs/atlas/mvaskev/sm/processed_4D_ttbar_10fb_events_with_only_jet_particles_4D.pkl',
+                          help='global path to training data file; must be in pickle (.pkl) format')
+    required.add_argument('-t', '--test', nargs='?', required=True,
+                          const='/nfs/atlas/mvaskev/sm/processed_4D_z_jets_10fb_events_with_only_jet_particles_4D.pkl',
+                          help='global path to testing data file; must be in pickle (.pkl) format')
+    # Optional flag if user wants to plot loss values
+    # Note that some minor changes in fastaiv2 may be needed for this to work
+    parser.add_argument('-p', '--plot', default=False, action='store_true',
+                          help='choose to attempt saving of loss optimisation and training loss plots')
+    return parser.parse_args()
+
+# Function to custom normalise dataset of 4-vectors
+# Arguments:
+#     df: pandas DataFrame with one particle per row, columns being the 4 features (E, pt, eta, phi)
 def custom_normalise(df):
     # Convert dataset items into floats
     df = df.astype('float32')
@@ -76,6 +99,11 @@ def custom_normalise(df):
     df['pt'] = np.log10(df['pt'])
     return df
 
+# Function to plot autoencoder performance
+# Arguments:
+#     data_in: input numpy array with values of the 4-vectors in initial order
+#     data_out: output (decoded) numpy array with values of the 4-vectors in initial order
+#     col_names: indexable object with names of the 4 features in order same as data_in and data_out
 def plot(data_in, data_out, col_names):
     for col in np.arange(4):
         plt.figure()
