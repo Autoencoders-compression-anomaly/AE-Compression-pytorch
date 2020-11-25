@@ -6,7 +6,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 
 # Function for parsing command line arguments
-# Refturns: composite Object containing command line arguments
+# Returns: composite Object containing command line arguments
 def args_parser():
     parser = argparse.ArgumentParser(description='Pre-process csv data: convert to pickle format and choose appropriate particles')
     # User must provide arguments for training and testing datasets
@@ -47,6 +47,19 @@ def read_data(input_path, rlimit=None, plimit=20000):
 
     return data[:plimit]
 
+# Function to filter out non-jet particles from events
+# Arguments:
+#     x1: DataFrame containing events to be filtered
+def filter_not_jets(x1):
+    lst = []
+    for i in range(x1.shape[0]):
+        if  (x1[i][0] == 'j') or (x1[i][0] == 'b'):
+            continue
+        else:
+            lst.append(i)
+            print(i, x1[i][0])
+    return np.delete(x1, lst, 0)
+
 def main():
     # Resolve command line arguments
     args = args_parser()
@@ -56,7 +69,7 @@ def main():
         print('Invalid write file: write file must not include type extension')
         return
 
-    data = read_data(input_path, rlimit=2)
+    data = read_data(input_path, rlimit=3)
     
     #Find the longest line in the data 
     longest_line = max(data, key = len)
@@ -111,14 +124,7 @@ def main():
     x1 = np.delete(x, lst, 0)
     del x
 
-    lst = []
-    for i in range(x1.shape[0]):   
-        if  (x1[i][0] == 'j') or (x1[i][0] == 'b'):
-            continue
-        else:
-            lst.append(i)
-            print(i, x1[i][0])
-    data_train = np.delete(x1, lst, 0)
+    data_train = filter_not_jets(x1)
     print(len(data_train))
 
     col_names = ['obj', 'E', 'pt', 'eta', 'phi']
