@@ -69,7 +69,7 @@ def main():
         print('Invalid write file: write file must not include type extension')
         return
 
-    data = read_data(input_path, rlimit=2)
+    data = read_data(input_path, rlimit=3)
 
     #Find the longest line in the data 
     longest_line = max(data, key = len)
@@ -94,15 +94,15 @@ def main():
     df = pd.DataFrame(data, columns=col_names)
     df.fillna(value=np.nan, inplace=True)
 
-    x_train_df = pd.DataFrame(df.values, columns=col_names)
-    x_train_df.fillna(value=0, inplace=True)
+    x_df = pd.DataFrame(df.values, columns=col_names)
+    x_df.fillna(value=0, inplace=True)
 
-    meta_train_df = x_train_df[meta_cols]
-    meta_train_df.to_pickle(save_path + '_metaData.pkl')
+    meta_df = x_df[meta_cols]
+    meta_df.to_pickle(save_path + '_metaData.pkl')
 
-    x_train_df = x_train_df.drop(columns=meta_cols)
+    x_df = x_df.drop(columns=meta_cols)
 
-    x = x_train_df.values.reshape([x_train_df.shape[0]*x_train_df.shape[1]//5,5])
+    x = x_df.values.reshape([x_df.shape[0]*x_df.shape[1]//5,5])
 
     lst = []
     for i in range(x.shape[0]):
@@ -111,30 +111,19 @@ def main():
     x1 = np.delete(x, lst, 0)
     del x
 
-    data_train = filter_not_jets(x1)
-    print(len(data_train))
+    data = filter_not_jets(x1)
+    print(len(data))
 
     col_names = ['obj', 'E', 'pt', 'eta', 'phi']
 
-    # data_train_df = pd.DataFrame(data_train, columns=col_names)
-    # data_train_df['obj'].to_pickle(save_path + '_meta_obj_train.pkl')
+    data_df = pd.DataFrame(data, columns=col_names)
+    data_df['obj'].to_pickle(save_path + '_meta_obj.pkl')
 
-    # data_test_df = pd.DataFrame(data_test, columns=col_names)
-    # data_test_df['obj'].to_pickle(save_path + '_meta_obj_test.pkl')
+    data_df = data_df.drop(columns='obj')
 
-    data_train_df = pd.DataFrame(data_train, columns=col_names)
-    data_train_df['obj'].to_pickle(save_path + '_meta_obj.pkl')
+    data_df = data_df.astype('float32')
 
-    data_train_df = data_train_df.drop(columns='obj')
-    # data_test_df = data_test_df.drop(columns='obj')
-
-    data_train_df = data_train_df.astype('float32')
-    # data_test_df = data_test_df.astype('float32')
-
-    # data_train_df.to_pickle(save_path + '_4D_train.pkl')
-    # data_test_df.to_pickle(save_path + '_4D_test.pkl')
-
-    data_train_df.to_pickle(save_path + '_4D.pkl')
+    data_df.to_pickle(save_path + '_4D.pkl')
     
     return
 
