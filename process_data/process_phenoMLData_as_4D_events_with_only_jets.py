@@ -47,6 +47,10 @@ def read_data(input_path, rlimit=None, plimit=20000):
 
     return data[:plimit]
 
+# Function to filter out events containing certain particles
+# Arguments:
+#     x_df: DataFrame containing events to be filtered
+#     ignore_particles: list containing particles events containing which should be ignored
 def filter_non_jet_events(x_df, ignore_particles):
     ignore_list = []
     for i in range(len(x_df)):
