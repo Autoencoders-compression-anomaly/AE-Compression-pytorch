@@ -1,22 +1,41 @@
 import os
-import click
+import argparse
 import random
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import test_split
+from sklearn.model_selection import train_test_split
 
-@click.command()
-@click.option('--input_path',
-              type=click.STRING,
-              default='/afs/cern.ch/work/h/hgupta/public/phenoML/datasets/ttbar_10fb.csv',
-              help='The path to the csv file.')
+# Function for parsing command line arguments
+# Returns: composite Object containing command line arguments
+def args_parser():
+    parser = argparse.ArgumentParser(description='Pre-process csv data: convert to pickle format and choose appropriate particles')
+    # User must provide arguments for training and testing datasets
+    required = parser.add_argument_group('required named arguments')
+    # If only flag is given, const value of each argument will be used
+    required.add_argument('-r', '--rfile', nargs='?', required=True,
+                          const='/nfs/atlas/mvaskev/sm/z_jets_10fb.csv',
+                          help='global path to dataset file; must be in csv format')
+    parser.add_argument('-w', '--wfile', nargs='?',
+                         help='global path to processed file; must not include file type extension')
+    return parser.parse_args()
 
-@click.option('--save_path',
-              type=click.STRING,
-              default='/afs/cern.ch/work/h/hgupta/public/phenoML/datasets/processed_4D_ttbar_10fb_all_events_all_particles',
-              help='The name to the pkl file.')
+# Function for formatting save file location
+# Arguments:
+#     input_path: global path to a file containing the data set
+def format_save_path(input_path):
+    save_dir = os.path.dirname(input_path)
+    input_filename, _ = os.path.splitext(os.path.basename(input_path))
+    return '{}/processed_4D_{}_all_events_all_particles'.format(save_dir, input_filename)
 
-def csv_to_df(input_path, save_path):
+def main():
+    # Resolve commanr line arguments
+    args = args_parser()
+    input_path = args.rfile
+    save_path = args.wfile if args.wfile else format_save_path(input_path)
+    if (os.path.splitext(save_path)[1]):
+        print('Invalid write file: write file must not include type extension')
+        return
+    
     data = []    
     print('Reading data at ', input_path)
     with open(input_path, 'r') as file:
@@ -85,4 +104,4 @@ def csv_to_df(input_path, save_path):
     return
 
 if __name__=='__main__':
-    csv_to_df()
+    main()
