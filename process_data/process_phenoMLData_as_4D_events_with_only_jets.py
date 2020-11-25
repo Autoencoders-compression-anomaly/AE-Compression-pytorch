@@ -131,28 +131,17 @@ def main():
     x1 = np.delete(x, lst, 0)
     del x
 
-    data_train = filter_not_jets(x1)
-    print(len(data_train))
+    data = filter_not_jets(x1)
+    print(len(data))
 
     col_names = ['obj', 'E', 'pt', 'eta', 'phi']
 
-    # data_df = pd.DataFrame(data_train, columns=col_names)
-    # data_df['obj'].to_pickle(save_path + '_meta_obj_train.pkl')
-
-    # data_test_df = pd.DataFrame(data_test, columns=col_names)
-    # data_test_df['obj'].to_pickle(save_path + '_meta_obj_test.pkl')
-
-    data_df = pd.DataFrame(data_train, columns=col_names)
+    data_df = pd.DataFrame(data, columns=col_names)
     data_df['obj'].to_pickle(save_path + '_meta_obj.pkl')
 
     data_df = data_df.drop(columns='obj')
-    # data_test_df = data_test_df.drop(columns='obj')
 
     data_df = data_df.astype('float32')
-    # data_test_df = data_test_df.astype('float32')
-
-    # data_df.to_pickle(save_path + '_4D_train.pkl')
-    # data_test_df.to_pickle(save_path + '_4D_test.pkl')
 
     data_df.to_pickle(save_path + '_4D.pkl')
     
