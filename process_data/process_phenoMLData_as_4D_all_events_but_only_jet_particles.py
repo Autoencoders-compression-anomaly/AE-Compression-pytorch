@@ -47,18 +47,18 @@ def read_data(input_path, rlimit=None, plimit=20000):
 
     return data[:plimit]
 
-# Function to filter out non-jet particles from all events
+# Function to filter out non-jet particles from events
 # Arguments:
-#     x1: DataFrame containing events to be filtered
-def filter_not_jets(x1):
+#     x: DataFrame containing events to be filtered
+def filter_not_jets(x):
     lst = []
-    for i in range(x1.shape[0]):
-        if  (x1[i][0] == 'j') or (x1[i][0] == 'b'):
+    for i in range(x.shape[0]):
+        if  (x[i][0] == 'j') or (x[i][0] == 'b'):
             continue
         else:
             lst.append(i)
-            print(i, x1[i][0])
-    return np.delete(x1, lst, 0)
+            print(i, x[i][0])
+    return np.delete(x, lst, 0)
 
 def main():
     # Resolve command line arguments
