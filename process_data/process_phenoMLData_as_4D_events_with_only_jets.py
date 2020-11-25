@@ -49,33 +49,33 @@ def read_data(input_path, rlimit=None, plimit=20000):
 
 # Function to filter out events containing certain particles
 # Arguments:
-#     x_df: DataFrame containing events to be filtered
-#     ignore_particles: list containing particles events containing which should be ignored
-def filter_non_jet_events(x_df, ignore_particles):
+#     x: DataFrame containing events to be filtered
+#     ignore: list containing particles events containing which should be ignored
+def filter_non_jet_events(x, ignore):
     ignore_list = []
-    for i in range(len(x_df)):
-        for j in x_df.loc[i].keys():
+    for i in range(len(x)):
+        for j in x.loc[i].keys():
             if 'obj' in j:
-                if x_df.loc[i][j] in ignore_particles:
+                if x.loc[i][j] in ignore:
                     ignore_list.append(i)
                     break
 
     print(ignore_list)
 
-    return x_df.drop(ignore_list)
+    return x.drop(ignore_list)
 
 # Function to filter out non-jet particles from events
 # Arguments:
-#     x1: DataFrame containing events to be filtered
-def filter_not_jets(x1):
+#     x: DataFrame containing events to be filtered
+def filter_not_jets(x):
     lst = []
-    for i in range(x1.shape[0]):
-        if  (x1[i][0] == 'j') or (x1[i][0] == 'b'):
+    for i in range(x.shape[0]):
+        if  (x[i][0] == 'j') or (x[i][0] == 'b'):
             continue
         else:
             lst.append(i)
-            print(i, x1[i][0])
-    return np.delete(x1, lst, 0)
+            print(i, x[i][0])
+    return np.delete(x, lst, 0)
 
 def main():
     # Resolve command line arguments
