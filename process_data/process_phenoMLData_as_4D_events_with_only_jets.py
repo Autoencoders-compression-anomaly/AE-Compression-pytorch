@@ -15,6 +15,10 @@ def args_parser():
     required.add_argument('-r', '--rfile', nargs='?', required=True,
                           const='/nfs/atlas/mvaskev/sm/z_jets_10fb.csv',
                           help='global path to dataset file; must be in csv format')
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('-a', '--allp', action='store_true')
+    group.add_argument('-j', '--jets-only', action='store_true')
+    group.add_argument('-e', '--event-jets', action='store_true')
     parser.add_argument('-w', '--wfile', nargs='?',
                          help='global path to processed file; must not include file type extension')
     return parser.parse_args()
@@ -106,7 +110,6 @@ def main():
         col_names.append('phi'+str(i))
 
     #Create a dataframe from the list, using the column names from before
-
     print('Processing the data..')
     df = pd.DataFrame(data, columns=col_names)
     df.fillna(value=np.nan, inplace=True)
@@ -119,8 +122,9 @@ def main():
 
     x_df = x_df.drop(columns=meta_cols)
 
-    ignore_particles = ['e-', 'e+', 'm-', 'm+', 'g']
-    x_df = filter_non_jet_events(x_df, ignore_particles)
+    if args.event_jets:
+        ignore_particles = ['e-', 'e+', 'm-', 'm+', 'g']
+        x_df = filter_non_jet_events(x_df, ignore_particles)
 
     x = x_df.values.reshape([x_df.shape[0]*x_df.shape[1]//5,5])
 
@@ -131,7 +135,11 @@ def main():
     x1 = np.delete(x, lst, 0)
     del x
 
-    data = filter_not_jets(x1)
+    if args.jets_only or args.event_jets:
+        data = filter_not_jets(x1)
+    else:
+        data = x1
+
     print(len(data))
 
     col_names = ['obj', 'E', 'pt', 'eta', 'phi']
