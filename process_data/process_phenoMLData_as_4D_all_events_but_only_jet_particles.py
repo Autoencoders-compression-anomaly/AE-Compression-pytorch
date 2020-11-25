@@ -14,16 +14,27 @@ def args_parser():
     # If only flag is given, const value of each argument will be used
     required.add_argument('-r', '--rfile', nargs='?', required=True,
                           const='/nfs/atlas/mvaskev/sm/z_jets_10fb.csv',
-                          help='global path to dataset file; must be in text (.csv) format')
-    required.add_argument('-w', '--wfile', nargs='?', required=True,
-                          const='/nfs/atlas/mvaskev/sm/processed_4D_z_jets_10fb_all_events_but_only_jet_particles',
-                          help='global path to processed file; must not include file type extension')
+                          help='global path to dataset file; must be in csv format')
+    parser.add_argument('-w', '--wfile', nargs='?',
+                         help='global path to processed file; must not include file type extension')
     return parser.parse_args()
+
+# Function for formatting save file location
+# Arguments:
+#     input_path: global path to a file containing the data set
+def format_save_path(input_path):
+    save_dir = os.path.dirname(input_path)
+    input_filename, _ = os.path.splitext(os.path.basename(input_path))
+    return '{}/processed_4D_{}_all_events_but_only_jet_particles'.format(save_dir, input_filename)
 
 def main():
     # Resolve command line arguments
     args = args_parser()
-    input_path, save_path = args.rfile, args.wfile
+    input_path = args.rfile
+    save_path = args.wfile if args.wfile else format_save_path(input_path)
+    if (os.path.splitext(save_path)[1]):
+        print('Invalid write file: write file must not include type extension')
+        return
 
     data = []    
     print('Reading data at ', input_path)
