@@ -56,7 +56,7 @@ def main():
         print('Invalid write file: write file must not include type extension')
         return
 
-    data = read_data(input_path, rlimit=1)
+    data = read_data(input_path, rlimit=2)
 
     #Find the longest line in the data 
     longest_line = max(data, key = len)
@@ -89,7 +89,7 @@ def main():
 
     x_train_df = x_train_df.drop(columns=meta_cols)
 
-    x = x_train_df_1.values.reshape([x_train_df_1.shape[0]*x_train_df_1.shape[1]//5,5])
+    x = x_train_df.values.reshape([x_train_df.shape[0]*x_train_df.shape[1]//5,5])
 
     lst = []
     for i in range(x.shape[0]):
