@@ -13,12 +13,15 @@ def args_parser():
     required = parser.add_argument_group('required named arguments')
     # If only flag is given, const value of each argument will be used
     required.add_argument('-r', '--rfile', nargs='?', required=True,
-                          const='/nfs/atlas/mvaskev/sm/z_jets_10fb.csv',
+                          const='/nfs/atlas/mvaskev/sm/ttbar_10fb.csv',
                           help='global path to dataset file; must be in csv format')
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('-a', '--allp', action='store_true')
-    group.add_argument('-j', '--jets-only', action='store_true')
-    group.add_argument('-e', '--event-jets', action='store_true')
+    group.add_argument('-a', '--allp', action='store_true',
+                       help='include all particle for all events into output file')
+    group.add_argument('-j', '--jets-only', action='store_true',
+                       help='include only jets from all events into output file')
+    group.add_argument('-e', '--event-jets', action='store_true',
+                       help='include only those events that contain only jets inot output file')
     parser.add_argument('-w', '--wfile', nargs='?',
                          help='global path to processed file; must not include file type extension')
     return parser.parse_args()
@@ -90,7 +93,8 @@ def main():
         print('Invalid write file: write file must not include type extension')
         return
 
-    data = read_data(input_path, rlimit=3)
+    # Get data from a file
+    data = read_data(input_path)
     
     #Find the longest line in the data 
     longest_line = max(data, key = len)
@@ -123,6 +127,7 @@ def main():
     x_df = x_df.drop(columns=meta_cols)
 
     if args.event_jets:
+        # Filter out events containing non-jet particles
         ignore_particles = ['e-', 'e+', 'm-', 'm+', 'g']
         x_df = filter_non_jet_events(x_df, ignore_particles)
 
@@ -136,6 +141,7 @@ def main():
     del x
 
     if args.jets_only or args.event_jets:
+        # Filter out non jet particles
         data = filter_not_jets(x1)
     else:
         data = x1
