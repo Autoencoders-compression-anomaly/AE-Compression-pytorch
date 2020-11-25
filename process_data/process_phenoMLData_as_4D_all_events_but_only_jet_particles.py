@@ -1,22 +1,30 @@
 import os
-import click
+import argparse
 import random
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
 
-@click.command()
-@click.option('--input_path',
-              type=click.STRING,
-              default='/afs/cern.ch/work/h/hgupta/public/phenoML/datasets/ttbar_10fb.csv',
-              help='The path to the csv file.')
+# Function for parsing command line arguments
+# Refturns: composite Object containing command line arguments
+def args_parser():
+    parser = argparse.ArgumentParser(description='Pre-process csv data: convert to pickle format and choose appropriate particles')
+    # User must provide arguments for training and testing datasets
+    required = parser.add_argument_group('required named arguments')
+    # If only flag is given, const value of each argument will be used
+    required.add_argument('-r', '--rfile', nargs='?', required=True,
+                          const='/nfs/atlas/mvaskev/sm/z_jets_10fb.csv',
+                          help='global path to dataset file; must be in text (.csv) format')
+    required.add_argument('-w', '--wfile', nargs='?', required=True,
+                          const='/nfs/atlas/mvaskev/sm/processed_4D_z_jets_10fb_all_events_but_only_jet_particles',
+                          help='global path to processed file; must not include file type extension')
+    return parser.parse_args()
 
-@click.option('--save_path',
-              type=click.STRING,
-              default='/afs/cern.ch/work/h/hgupta/public/phenoML/datasets/processed_4D_ttbar_10fb_all_events_but_only_jet_particles',
-              help='The name to the pkl file.')
+def main():
+    # Resolve command line arguments
+    args = args_parser()
+    input_path, save_path = args.rfile, args.wfile
 
-def csv_to_df(input_path, save_path):
     data = []    
     print('Reading data at ', input_path)
     with open(input_path, 'r') as file:
@@ -103,4 +111,4 @@ def csv_to_df(input_path, save_path):
     return
 
 if __name__=='__main__':
-    csv_to_df()
+    main()
