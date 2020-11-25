@@ -27,6 +27,26 @@ def format_save_path(input_path):
     input_filename, _ = os.path.splitext(os.path.basename(input_path))
     return '{}/processed_4D_{}_all_events_all_particles'.format(save_dir, input_filename)
 
+# Function for reading data input
+# Arguments:
+#     input_path: string containing global path to input file
+#     rlimit: integer maximum number of lines to read from input file
+#     plimit: integer maximum number of particles to return
+# Returns: list object with input data
+def read_data(input_path, rlimit=None, plimit=20000):
+    data = []
+    print('Reading data at ', input_path)
+    with open(input_path, 'r') as f:
+        for cnt, line in enumerate(f):
+            line = line.replace(';', ',')
+            line = line.rstrip(',\n')
+            line = line.split(',')
+            data.append(line)
+            if rlimit and cnt == rlimit:
+                break
+
+    return data[:plimit]
+
 def main():
     # Resolve commanr line arguments
     args = args_parser()
@@ -35,17 +55,8 @@ def main():
     if (os.path.splitext(save_path)[1]):
         print('Invalid write file: write file must not include type extension')
         return
-    
-    data = []    
-    print('Reading data at ', input_path)
-    with open(input_path, 'r') as file:
-        for line in file.readlines():
-            line = line.replace(';', ',')
-            line = line.rstrip(',\n')
-            line = line.split(',')
-            data.append(line)
 
-    data = data[:20000]
+    data = read_data(input_path, rlimit=1)
 
     #Find the longest line in the data 
     longest_line = max(data, key = len)
