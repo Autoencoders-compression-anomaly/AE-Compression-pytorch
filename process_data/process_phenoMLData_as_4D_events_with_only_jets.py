@@ -47,6 +47,19 @@ def read_data(input_path, rlimit=None, plimit=20000):
 
     return data[:plimit]
 
+def filter_non_jet_events(x_df, ignore_particles):
+    ignore_list = []
+    for i in range(len(x_df)):
+        for j in x_df.loc[i].keys():
+            if 'obj' in j:
+                if x_df.loc[i][j] in ignore_particles:
+                    ignore_list.append(i)
+                    break
+
+    print(ignore_list)
+
+    return x_df.drop(ignore_list)
+
 # Function to filter out non-jet particles from events
 # Arguments:
 #     x1: DataFrame containing events to be filtered
@@ -103,17 +116,7 @@ def main():
     x_df = x_df.drop(columns=meta_cols)
 
     ignore_particles = ['e-', 'e+', 'm-', 'm+', 'g']
-    ignore_list = []
-    for i in range(len(x_df)):
-        for j in x_df.loc[i].keys():
-            if 'obj' in j:
-                if x_df.loc[i][j] in ignore_particles:
-                    ignore_list.append(i)
-                    break
-
-    print(ignore_list)
-
-    x_df = x_df.drop(ignore_list)
+    x_df = filter_non_jet_events(x_df, ignore_particles)
 
     x = x_df.values.reshape([x_df.shape[0]*x_df.shape[1]//5,5])
 
