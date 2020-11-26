@@ -21,7 +21,11 @@ def args_parser():
     group.add_argument('-j', '--jets-only', action='store_true',
                        help='include only jets from all events into output file')
     group.add_argument('-nj', '--not-jets', action='store_true',
-                       help='nclude only non-jet particles from all events into output file')
+                       help='include only non-jet particles from all events into output file')
+    group.add_argument('-lj', '--light-jets', action='store_true',
+                       help='include only light jet particles from all events into output file')
+    group.add_argument('-bj', '--b-jets', action='store_true',
+                       help='include only b-jet particles from all events into output file')
     group.add_argument('-e', '--event-jets', action='store_true',
                        help='include only those events that contain only jets into output file')
     parser.add_argument('-w', '--wfile', nargs='?',
@@ -42,6 +46,10 @@ def format_save_path(input_path, args):
         return '{}/processed_4D_{}_all_events_but_only_jet_particles'.format(save_dir, input_filename)
     elif (args.not_jets):
         return '{}/processed_4D_{}_all_events_but_only_non_jet_particles'.format(save_dir, input_filename)
+    elif (args.light_jets):
+        return '{}/processed_4D_{}_all_events_but_only_light_jet_particles'.format(save_dir, input_filename)
+    elif (args.b_jets):
+        return '{}/processed_4D_{}_all_events_but_only_b_jet_particles'.format(save_dir, input_filename)
     elif (args.event_jets):
         return '{}/processed_4D_{}_events_with_only_jet_particles'.format(save_dir, input_filename)
 
@@ -94,6 +102,32 @@ def filter_not_jets(x):
         else:
             lst.append(i)
             #print(i, x[i][0])
+    return np.delete(x, lst, 0)
+
+# Function to filter out non-b-jet particles from events
+# Arguments:
+#     x: DataFrame containing events to be filtered
+# Returns: filtered events DataFrame
+def filter_not_b_jets(x):
+    lst = []
+    for i in range(x.shape[0]):
+        if (x[i][0] == 'b'):
+            continue
+        else:
+            lst.append(i)
+    return np.delete(x, lst, 0)
+
+# Function to filter out non-light-jet particles from events
+# Arguments:
+#     x: DataFrame containing events to be filtered
+# Returns: filtered events DataFrame
+def filter_not_light_jets(x):
+    lst = []
+    for i in range(x.shape[0]):
+        if (x[i][0] == 'j'):
+            continue
+        else:
+            lst.append(i)
     return np.delete(x, lst, 0)
 
 # Function to filter out jet particles from events
@@ -170,6 +204,12 @@ def main():
     elif args.not_jets:
         # Filter out jet particles
         data = filter_jets(x1)
+    elif args.light_jets:
+        # Filter out all particles but light jet ones
+        data = filter_not_light_jets(x1)
+    elif args.b_jets:
+        # Filter out all particles but b-jet ones
+        data = filter_not_b_jets(x1)
     else:
         data = x1
 
