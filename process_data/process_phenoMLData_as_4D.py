@@ -51,7 +51,7 @@ def format_save_path(input_path, args):
 #     rlimit: integer maximum number of lines to read from input file
 #     plimit: integer maximum number of particles to return
 # Returns: list object with input data
-def read_data(input_path, rlimit=None, plimit=20000):
+def read_data(input_path, rlimit=None, plimit=None):
     data = []
     print('Reading data at ', input_path)
     with open(input_path, 'r') as f:
@@ -62,8 +62,7 @@ def read_data(input_path, rlimit=None, plimit=20000):
             data.append(line)
             if rlimit and cnt == rlimit:
                 break
-
-    return data
+    return data[:plimit]
 
 # Function to filter out events containing certain particles
 # Arguments:
