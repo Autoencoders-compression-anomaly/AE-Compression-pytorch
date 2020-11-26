@@ -13,13 +13,15 @@ def args_parser():
     required = parser.add_argument_group('required named arguments')
     # If only flag is given, const value of each argument will be used
     required.add_argument('-r', '--rfile', nargs='?', required=True,
-                          const='/nfs/atlas/mvaskev/sm/ttbar_10fb.csv',
+                          const='/nfs/atlas/mvaskev/sm/z_jets_10fb.csv',
                           help='global path to dataset file; must be in csv format')
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('-a', '--allp', action='store_true',
                        help='include all particle for all events into output file')
     group.add_argument('-j', '--jets-only', action='store_true',
                        help='include only jets from all events into output file')
+    group.add_argument('-nj', '--not-jets', action='store_true',
+                       help='nclude only non-jet particles from all events into output file')
     group.add_argument('-e', '--event-jets', action='store_true',
                        help='include only those events that contain only jets into output file')
     parser.add_argument('-w', '--wfile', nargs='?',
@@ -29,6 +31,8 @@ def args_parser():
 # Function for formatting save file location
 # Arguments:
 #     input_path: global path to a file containing the data set
+#     args: command line arguments, containing settings information
+# Returns: string containing global path to output filename
 def format_save_path(input_path, args):
     save_dir = os.path.dirname(input_path)
     input_filename, _ = os.path.splitext(os.path.basename(input_path))
@@ -36,6 +40,8 @@ def format_save_path(input_path, args):
         return '{}/processed_4D_{}_all_events_all_particles'.format(save_dir, input_filename)
     elif (args.jets_only):
         return '{}/processed_4D_{}_all_events_but_only_jet_particles'.format(save_dir, input_filename)
+    elif (args.not_jets):
+        return '{}/processed_4D_{}_all_events_but_only_non_jet_particles'.format(save_dir, input_filename)
     elif (args.event_jets):
         return '{}/processed_4D_{}_events_with_only_jet_particles'.format(save_dir, input_filename)
 
@@ -57,12 +63,13 @@ def read_data(input_path, rlimit=None, plimit=20000):
             if rlimit and cnt == rlimit:
                 break
 
-    return data[:20000]
+    return data
 
 # Function to filter out events containing certain particles
 # Arguments:
 #     x: DataFrame containing events to be filtered
 #     ignore: list containing particles events containing which should be ignored
+# Returns: filtered events DataFrame
 def filter_non_jet_events(x, ignore):
     ignore_list = []
     for i in range(len(x)):
@@ -72,13 +79,14 @@ def filter_non_jet_events(x, ignore):
                     ignore_list.append(i)
                     break
 
-    print(ignore_list)
+    #print(ignore_list)
 
     return x.drop(ignore_list)
 
 # Function to filter out non-jet particles from events
 # Arguments:
 #     x: DataFrame containing events to be filtered
+# Returns: filtered events DataFrame
 def filter_not_jets(x):
     lst = []
     for i in range(x.shape[0]):
@@ -86,7 +94,19 @@ def filter_not_jets(x):
             continue
         else:
             lst.append(i)
-            print(i, x[i][0])
+            #print(i, x[i][0])
+    return np.delete(x, lst, 0)
+
+# Function to filter out jet particles from events
+# Arguments:
+#     x: DataFrame containing events to be filtered
+# Returns: filtered events DataFrame
+def filter_jets(x):
+    lst = []
+    for i in range(x.shape[0]):
+        if (x[i][0] == 'j') or (x[i][0] == 'b'):
+            lst.append(i)
+            #print(i, x[i][0])
     return np.delete(x, lst, 0)
 
 def main():
@@ -99,7 +119,7 @@ def main():
         return
 
     # Get data from a file
-    data = read_data(input_path, rlimit=100000)
+    data = read_data(input_path, rlimit=200000)
     
     #Find the longest line in the data 
     longest_line = max(data, key = len)
@@ -148,6 +168,9 @@ def main():
     if args.jets_only or args.event_jets:
         # Filter out non jet particles
         data = filter_not_jets(x1)
+    elif args.not_jets:
+        # Filter out jet particles
+        data = filter_jets(x1)
     else:
         data = x1
 
