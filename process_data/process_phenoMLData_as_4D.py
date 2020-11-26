@@ -21,7 +21,7 @@ def args_parser():
     group.add_argument('-j', '--jets-only', action='store_true',
                        help='include only jets from all events into output file')
     group.add_argument('-e', '--event-jets', action='store_true',
-                       help='include only those events that contain only jets inot output file')
+                       help='include only those events that contain only jets into output file')
     parser.add_argument('-w', '--wfile', nargs='?',
                          help='global path to processed file; must not include file type extension')
     return parser.parse_args()
@@ -29,10 +29,15 @@ def args_parser():
 # Function for formatting save file location
 # Arguments:
 #     input_path: global path to a file containing the data set
-def format_save_path(input_path):
+def format_save_path(input_path, args):
     save_dir = os.path.dirname(input_path)
     input_filename, _ = os.path.splitext(os.path.basename(input_path))
-    return '{}/processed_4D_{}_events_with_only_jet_particles'.format(save_dir, input_filename)
+    if (args.allp):
+        return '{}/processed_4D_{}_all_events_all_particles'.format(save_dir, input_filename)
+    elif (args.jets_only):
+        return '{}/processed_4D_{}_all_events_but_only_jet_particles'.format(save_dir, input_filename)
+    elif (args.event_jets):
+        return '{}/processed_4D_{}_events_with_only_jet_particles'.format(save_dir, input_filename)
 
 # Function for reading data input
 # Arguments:
@@ -52,7 +57,7 @@ def read_data(input_path, rlimit=None, plimit=20000):
             if rlimit and cnt == rlimit:
                 break
 
-    return data[:plimit]
+    return data[:20000]
 
 # Function to filter out events containing certain particles
 # Arguments:
@@ -88,13 +93,13 @@ def main():
     # Resolve command line arguments
     args = args_parser()
     input_path = args.rfile
-    save_path = args.wfile if args.wfile else format_save_path(input_path)
+    save_path = args.wfile if args.wfile else format_save_path(input_path, args)
     if (os.path.splitext(save_path)[1]):
         print('Invalid write file: write file must not include type extension')
         return
 
     # Get data from a file
-    data = read_data(input_path)
+    data = read_data(input_path, rlimit=100000)
     
     #Find the longest line in the data 
     longest_line = max(data, key = len)
