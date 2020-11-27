@@ -68,14 +68,12 @@ class AE_3D_200_LeakyReLU(nn.Module):
 def args_parser():
     parser = argparse.ArgumentParser(description='Run autoencoder over full train-test cycle')
     # User must provide arguments for training and testing datasets
-    required = parser.add_argument_group('required named arguments')
+    data = parser.add_mutually_exclusive_group(required=True)
     # If only flag is given, const value of each argument will be used
-    required.add_argument('-tr', '--train', nargs='?', required=True,
-                          const='/nfs/atlas/mvaskev/sm/processed_4D_ttbar_10fb_all_events_but_only_jet_particles_4D.pkl',
-                          help='global path to training data file; must be in pickle (.pkl) format')
-    required.add_argument('-t', '--test', nargs='?', required=True,
-                          const='/nfs/atlas/mvaskev/sm/processed_4D_z_jets_10fb_all_events_but_only_jet_particles_4D.pkl',
-                          help='global path to testing data file; must be in pickle (.pkl) format')
+    data.add_argument('-d', '--data', metavar='DATA', nargs=2,
+                      help='global paths to training and testing data files in that order; both must be in pickle (.pkl) format')
+    data.add_argument('-f', '--dfile', metavar='READ_FILE', nargs=1,
+                      help='global path to text file containing global paths to training and testing datasets, one per line, in that order')
     # Optional flag if user wants to plot loss values
     # Note that some minor changes in fastaiv2 may be needed for this to work
     parser.add_argument('-p', '--plot', default=False, action='store_true',
@@ -132,11 +130,21 @@ def plot(data_in, data_out, col_names):
         plt.savefig('plts/comparison_{}.png'.format(str(col_names[col])))
         plt.close()
 
+# Function to read data file locations from file
+# Arguments:
+#     string containing path to the file to be read
+# Returns: list of data files
+def read_dataname_file(path):
+    return open(path, 'r').read().split('\n')[:-1]
+
 def main():
     # Parse command line arguments
     args = args_parser()
     loss_plot = args.plot
-    train_path, test_path = args.train, args.test
+    if args.data:
+        train_path, test_path = args.data
+    elif args.dfile:
+        train_path, test_path = read_dataname_file(args.dfile[0])
     # Check that training and testing datasets are formatted correctly
     train_filename, train_extension = os.path.splitext(train_path)
     if (train_extension != '.pkl' or os.path.splitext(test_path)[1] != '.pkl'):
