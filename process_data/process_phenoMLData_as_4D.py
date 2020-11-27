@@ -9,25 +9,12 @@ from sklearn.model_selection import train_test_split
 # Returns: composite Object containing command line arguments
 def args_parser():
     parser = argparse.ArgumentParser(description='Pre-process csv data: convert to pickle format and choose appropriate particles')
-    # User must provide arguments for training and testing datasets
-    required = parser.add_argument_group('required named arguments')
-    # If only flag is given, const value of each argument will be used
-    required.add_argument('-r', '--rfile', nargs='?', required=True,
-                          const='/nfs/atlas/mvaskev/sm/z_jets_10fb.csv',
-                          help='global path to dataset file; must be in csv format')
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('-a', '--allp', action='store_true',
-                       help='include all particle for all events into output file')
-    group.add_argument('-j', '--jets-only', action='store_true',
-                       help='include only jets from all events into output file')
-    group.add_argument('-nj', '--not-jets', action='store_true',
-                       help='include only non-jet particles from all events into output file')
-    group.add_argument('-lj', '--light-jets', action='store_true',
-                       help='include only light jet particles from all events into output file')
-    group.add_argument('-bj', '--b-jets', action='store_true',
-                       help='include only b-jet particles from all events into output file')
-    group.add_argument('-e', '--event-jets', action='store_true',
-                       help='include only those events that contain only jets into output file')
+    # User must provide global path to data file
+    parser.add_argument('rfile', nargs=1,
+                        help='global path to dataset file; must be in csv format')
+    parser.add_argument('-s', '--setting', nargs='?', default='all', const='all',
+                        choices=['all', 'jets', 'non_jets', 'light_jets', 'b_jets', 'jet_events'],
+                        help='choose a setting upon which to filter particles (default: %(default)s)')
     parser.add_argument('-w', '--wfile', nargs='?',
                          help='global path to processed file; must not include file type extension')
     return parser.parse_args()
@@ -35,22 +22,22 @@ def args_parser():
 # Function for formatting save file location
 # Arguments:
 #     input_path: global path to a file containing the data set
-#     args: command line arguments, containing settings information
+#     setting: command line argument choice, containing settings information
 # Returns: string containing global path to output filename
-def format_save_path(input_path, args):
+def format_save_path(input_path, setting):
     save_dir = os.path.dirname(input_path)
     input_filename, _ = os.path.splitext(os.path.basename(input_path))
-    if (args.allp):
+    if setting == 'all':
         return '{}/processed_4D_{}_all_events_all_particles'.format(save_dir, input_filename)
-    elif (args.jets_only):
+    elif setting == 'jets':
         return '{}/processed_4D_{}_all_events_but_only_jet_particles'.format(save_dir, input_filename)
-    elif (args.not_jets):
+    elif setting == 'non_jets':
         return '{}/processed_4D_{}_all_events_but_only_non_jet_particles'.format(save_dir, input_filename)
-    elif (args.light_jets):
+    elif setting == 'light_jets':
         return '{}/processed_4D_{}_all_events_but_only_light_jet_particles'.format(save_dir, input_filename)
-    elif (args.b_jets):
+    elif setting == 'b_jets':
         return '{}/processed_4D_{}_all_events_but_only_b_jet_particles'.format(save_dir, input_filename)
-    elif (args.event_jets):
+    elif setting == 'jet_events':
         return '{}/processed_4D_{}_events_with_only_jet_particles'.format(save_dir, input_filename)
 
 # Function for reading data input
@@ -146,7 +133,7 @@ def main():
     # Resolve command line arguments
     args = args_parser()
     input_path = args.rfile
-    save_path = args.wfile if args.wfile else format_save_path(input_path, args)
+    save_path = args.wfile if args.wfile else format_save_path(input_path, args.setting)
     if (os.path.splitext(save_path)[1]):
         print('Invalid write file: write file must not include type extension')
         return
@@ -184,7 +171,7 @@ def main():
 
     x_df = x_df.drop(columns=meta_cols)
 
-    if args.event_jets:
+    if args.setting == 'jet_events':
         # Filter out events containing non-jet particles
         ignore_particles = ['e-', 'e+', 'm-', 'm+', 'g']
         x_df = filter_non_jet_events(x_df, ignore_particles)
@@ -198,16 +185,16 @@ def main():
     x1 = np.delete(x, lst, 0)
     del x
 
-    if args.jets_only or args.event_jets:
+    if args.setting == 'jets' or args.setting == 'jet_events':
         # Filter out non jet particles
         data = filter_not_jets(x1)
-    elif args.not_jets:
+    elif args.setting == 'non_jets':
         # Filter out jet particles
         data = filter_jets(x1)
-    elif args.light_jets:
+    elif args.setting == 'light_jets':
         # Filter out all particles but light jet ones
         data = filter_not_light_jets(x1)
-    elif args.b_jets:
+    elif args.setting == 'b_jets':
         # Filter out all particles but b-jet ones
         data = filter_not_b_jets(x1)
     else:
