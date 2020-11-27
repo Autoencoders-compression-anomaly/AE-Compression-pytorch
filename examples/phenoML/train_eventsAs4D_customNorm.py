@@ -12,6 +12,7 @@ import torch.utils.data
 
 from torch.utils.data import TensorDataset, DataLoader
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 from fastai import learner
 from fastai.data import core
 from fastai.metrics import mse
@@ -70,20 +71,24 @@ def args_parser():
     required = parser.add_argument_group('required named arguments')
     # If only flag is given, const value of each argument will be used
     required.add_argument('-tr', '--train', nargs='?', required=True,
-                          const='/nfs/atlas/mvaskev/sm/processed_4D_ttbar_10fb_events_with_only_jet_particles_4D.pkl',
+                          const='/nfs/atlas/mvaskev/sm/processed_4D_ttbar_10fb_all_events_but_only_jet_particles_4D.pkl',
                           help='global path to training data file; must be in pickle (.pkl) format')
     required.add_argument('-t', '--test', nargs='?', required=True,
-                          const='/nfs/atlas/mvaskev/sm/processed_4D_z_jets_10fb_events_with_only_jet_particles_4D.pkl',
+                          const='/nfs/atlas/mvaskev/sm/processed_4D_z_jets_10fb_all_events_but_only_jet_particles_4D.pkl',
                           help='global path to testing data file; must be in pickle (.pkl) format')
     # Optional flag if user wants to plot loss values
     # Note that some minor changes in fastaiv2 may be needed for this to work
     parser.add_argument('-p', '--plot', default=False, action='store_true',
                           help='choose to attempt saving of loss optimisation and training loss plots')
+    parser.add_argument('-n', '--norm', nargs='?', default='custom', const='custom',
+                        choices=['custom', 'std'], 
+                        help='choose normalisation method (default: %(default)s)')
     return parser.parse_args()
 
 # Function to custom normalise dataset of 4-vectors
 # Arguments:
 #     df: pandas DataFrame with one particle per row, columns being the 4 features (E, pt, eta, phi)
+# Returns: DataFrame containing custom normalised dataset
 def custom_normalise(df):
     # Convert dataset items into floats
     df = df.astype('float32')
@@ -97,6 +102,17 @@ def custom_normalise(df):
 
     df['E'] = np.log10(df['E'])
     df['pt'] = np.log10(df['pt'])
+    return df
+
+# Function to standard normalise dataset of 4-vectors
+# Arguments:
+#     df: pandas DataFrame with one particle per row, columns being the 4 features (E, pt, eta, phi)
+# Returns: DataFrame containing standard normalised dataset
+def std_normalise(df):
+    variables = df.keys()
+    x = df[variables].values
+    x_scaled = StandardScaler().fit_transform(x)
+    df[variables] = x_scaled
     return df
 
 # Function to plot autoencoder performance
@@ -156,10 +172,16 @@ def main():
     train = pd.read_pickle(train_split_path)
     valid = pd.read_pickle(valid_split_path)
 
-    # Custom normalise training and testing datasets
-    train = custom_normalise(train)
-    valid = custom_normalise(valid)
-    test = custom_normalise(test)
+    if (args.norm == 'custom'):
+        # Custom normalise training and testing datasets
+        train = custom_normalise(train)
+        valid = custom_normalise(valid)
+        test = custom_normalise(test)
+    elif (args.norm == 'std'):
+       # Standard normalise training and testing datasets
+       train = std_normalise(train)
+       valid = std_normalise(valid)
+       test = std_normalise(test)
 
     # Create TensorDatasets
     train_ds = TensorDataset(torch.tensor(train.values, dtype=torch.float), torch.tensor(train.values, dtype=torch.float))
