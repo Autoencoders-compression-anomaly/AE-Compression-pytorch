@@ -590,20 +590,20 @@ def custom_unnormalize(normalized_data):
 boundDict = { #Min and Max Variable values for a filtered dataset of (sub)leading jets passing TLA cut
 'ActiveArea4vec_eta' : [-3.7, 3.7],
 'ActiveArea4vec_phi' : [-3.142, 3.142],
-'CentroidR' : [1646, 6040],
+'CentroidR' : [1630, 6110],
 'DetectorEta' : [-3.7, 3.7],
-'HECQuality' : [-2.5, 2.1],
+'HECQuality' : [-2.5, 2.5],
 'LeadingClusterCenterLambda' : [0, 12900],
-'LeadingClusterPt' : [6, 1250],
-'LeadingClusterSecondLambda' : [0, 2200],
-'LeadingClusterSecondR' : [0, 1000],
+'LeadingClusterPt' : [7.4, 1380],
+'LeadingClusterSecondLambda' : [0, 2400],
+'LeadingClusterSecondR' : [0, 1100],
 'N90Constituents' : [1, 32],
 'NegativeE' : [-220, 0],
-'Timing' : [-37, 34],
+'Timing' : [-120, 47],
 'eta' : [-3.65, 3.6],
 'm' : [0, 300],
 'phi' : [-3.142, 3.142],
-'pt' : [0, 1700]
+'pt' : [0, 2000]
 }
 
 def interval_normalization(train, test, lower, upper): #Normalizing to either the unit interval/[-pi,pi]
@@ -613,6 +613,56 @@ def interval_normalization(train, test, lower, upper): #Normalizing to either th
     for var in boundDict:
         varMin = boundDict[var][0]
         varMax = boundDict[var][1]
+        train_cp[var] = (1/(varMax - varMin)) * ((upper - lower) * train_cp[var] + varMax * lower - varMin * upper)
+        test_cp[var] = (1/(varMax - varMin)) *((upper- lower) * test_cp[var] + varMax * lower - varMin * upper)
+
+    return train_cp, test_cp
+
+logBoundDict = { #Min and Max variable logged values for a filtered dataset of (sub)leading jet passing TLA cut 
+'ActiveArea' : [.319, .89],
+'ActiveArea4vec_eta' : [-3.7, 3.7],
+'ActiveArea4vec_m' : [.078, .34],
+'ActiveArea4vec_phi' : [-3.142, 3.142],
+'ActiveArea4vec_pt' : [.31, .9],
+'AverageLArQF' : [0, 2.82],
+'CentroidR' : [3.2, 3.8],
+'DetectorEta' : [-3.7, 3.7],
+'HECQuality' : [-2.5, 2.5],
+'LeadingClusterCenterLambda' : [0, 2.1],
+'LeadingClusterPt' : [.87, 3.14],
+'LeadingClusterSecondLambda' : [0, 1.4],
+'LeadingClusterSecondR' : [0, 1.1],
+'N90Constituents' : [1, 32],
+'NegativeE' : [.14, 2.45],
+'Timing' : [-120, 47],
+'Width' : [-.066, .28],
+'WidthPhi' : [-.25, .24],
+'eta' : [-3.65, 3.6],
+'m' : [0, 2.35],
+'phi' : [-3.142, 3.142],
+'pt' : [1.92, 3.31]
+}
+
+def log_int_normalization(train, test, lower, upper): #Normalizing to a interval with some variables logged
+    train_cp = train.copy()
+    test_cp = test.copy()
+
+    for data in [train_cp, test_cp]:
+        data['AverageLArQF'] = (np.log10(data['AverageLArQF'] + log_add) - log_sub) 
+        data['CentroidR'] = np.log10(data['CentroidR'])
+        data['LeadingClusterCenterLambda'] = (np.log10(data['LeadingClusterCenterLambda'] + log_add) - log_sub)
+        data['LeadingClusterPt'] = np.log10(data['LeadingClusterPt'])
+        data['LeadingClusterSecondLambda'] = (np.log10(data['LeadingClusterSecondLambda'] + log_add) - log_sub)
+        data['LeadingClusterSecondR'] = (np.log10(data['LeadingClusterSecondR'] + log_add) - log_sub)
+        data['m'] = np.log10(data['m'] + m_add)
+        data['NegativeE'] = np.log10(-data['NegativeE'] + 1)
+        data['OotFracClusters10'] = np.log10(data['OotFracClusters10'] + 1)
+        data['OotFracClusters5'] = np.log10(data['OotFracClusters5'] + 1)
+        data['pt'] = np.log10(data['pt'])
+
+    for var in logBoundDict:
+        varMin = logBoundDict[var][0]
+        varMax = logBoundDict[var][1]
         train_cp[var] = (1/(varMax - varMin)) * ((upper - lower) * train_cp[var] + varMax * lower - varMin * upper)
         test_cp[var] = (1/(varMax - varMin)) *((upper- lower) * test_cp[var] + varMax * lower - varMin * upper)
 

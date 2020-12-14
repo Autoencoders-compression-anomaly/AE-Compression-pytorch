@@ -1094,6 +1094,34 @@ class AE_2D_v1000(nn.Module):
         return 'in-1000-400-100-2-100-400-1000-out'
 
 
+class AE_14D_reparam(nn.Module):
+    def __init__(self, n_features=27):
+        super(AE_14D_reparam, self).__init__()
+        self.en1 = nn.Linear(27, 27) #Reparameterization layer, currently fully connected
+        self.en2 = nn.Linear(27, 200)
+        self.en3 = nn.Linear(200, 200)
+        self.en4 = nn.Linear(200, 200)
+        self.en5 = nn.Linear(200, 14)
+        self.de1 = nn.Linear(14, 200)
+        self.de2 = nn.Linear(200, 200)
+        self.de3 = nn.Linear(200, 200)
+        self.de4 = nn.Linear(200, 27)
+        self.tanh = nn.Tanh()
+
+    def encode(self, x):
+        return self.en5(self.tanh(self.en4(self.tanh(self.en3(self.tanh(self.en2(self.tanh(self.en1(self.tanh(x))))))))))
+
+    def decode(self, x):
+        return self.de4(self.tanh(self.de3(self.tanh(self.de2(self.tanh(self.de1(self.tanh(x))))))))
+
+    def forward(self, x):
+        z = self.encode(x)
+        return self.decode(z)
+
+    def describe(self):
+        return 'in-in-200-200-200-14-200-200-200-out'
+
+    
 # Some helper functions
 def get_data(train_ds, valid_ds, bs):
     return (

@@ -4,8 +4,8 @@ arguments	= $(ClusterId)$(ProcId)
 output 		= logs/27Dtrain.$(ClusterId).$(ProcId).out
 error 		= logs/27Dtrain.$(ClusterId).$(ProcId).err
 log 		= logs/27Dtrain.$(ClusterId).log
-+JobFlavour	= "workday"
-transfer_input_files	= ../examples/27D/27D_train.py 
++MaxRuntime 	= 172800 
+transfer_input_files	= ../examples/27D/27D_train_reparam.py 
 request_gpus	= 1
 request_cpus	= 2
 
