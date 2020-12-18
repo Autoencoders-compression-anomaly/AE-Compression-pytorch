@@ -19,6 +19,13 @@ def args_parser():
                          help='global path to processed file; must not include file type extension')
     return parser.parse_args()
 
+# Helper function to create directory if such does not exist
+# Arguments:
+#     directory: string containing path to directory to be created
+def make_directory(directory):
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
 # Function for formatting save file location
 # Arguments:
 #     input_path: global path to a file containing the data set
@@ -28,36 +35,53 @@ def format_save_path(input_path, setting):
     save_dir = os.path.dirname(input_path)
     input_filename, _ = os.path.splitext(os.path.basename(input_path))
     if setting == 'all':
-        return '{}/processed_4D_{}_all_events_all_particles'.format(save_dir, input_filename)
+        sdir = '{}/processed_4D_{}_all_events_all_particles/'.format(save_dir, input_filename)
+        make_directory(sdir)
+        return sdir + 'processed_4D_{}_all_events_all_particles'.format(input_filename)
     elif setting == 'jets':
-        return '{}/processed_4D_{}_all_events_but_only_jet_particles'.format(save_dir, input_filename)
+        sdir = '{}/processed_4D_{}_all_events_but_only_jet_particles/'.format(save_dir, input_filename)
+        make_directory(sdir)
+        return sdir + 'processed_4D_{}_all_events_but_only_jet_particles'.format(input_filename)
     elif setting == 'non_jets':
-        return '{}/processed_4D_{}_all_events_but_only_non_jet_particles'.format(save_dir, input_filename)
+        sdir = '{}/processed_4D_{}_all_events_but_only_non_jet_particles/'.format(save_dir, input_filename)
+        make_directory(sdir)
+        return sdir + 'processed_4D_{}_all_events_but_only_non_jet_particles'.format(input_filename)
     elif setting == 'light_jets':
-        return '{}/processed_4D_{}_all_events_but_only_light_jet_particles'.format(save_dir, input_filename)
+        sdir = '{}/processed_4D_{}_all_events_but_only_light_jet_particles/'.format(save_dir, input_filename)
+        make_directory(sdir)
+        return sdir + 'processed_4D_{}_all_events_but_only_light_jet_particles'.format(input_filename)
     elif setting == 'b_jets':
-        return '{}/processed_4D_{}_all_events_but_only_b_jet_particles'.format(save_dir, input_filename)
+        sdir = '{}/processed_4D_{}_all_events_but_only_b_jet_particles/'.format(save_dir, input_filename)
+        make_directory(sdir)
+        return sdir + 'processed_4D_{}_all_events_but_only_b_jet_particles'.format(input_filename)
     elif setting == 'jet_events':
-        return '{}/processed_4D_{}_events_with_only_jet_particles'.format(save_dir, input_filename)
+        sdir = '{}/processed_4D_{}_events_with_only_jet_particles/'.format(save_dir, input_filename)
+        make_directory(sdir)
+        return sdir + 'processed_4D_{}_events_with_only_jet_particles'.format(input_filename)
 
 # Function for reading data input
 # Arguments:
 #     input_path: string containing global path to input file
 #     rlimit: integer maximum number of lines to read from input file
+#     rbegin: integer value line at which to start reading file
 #     plimit: integer maximum number of particles to return
 # Returns: list object with input data
-def read_data(input_path, rlimit=None, plimit=None):
+def read_data(input_path, rlimit=None, rbegin=0, plimit=None):
     data = []
+    lbreak = False
     print('Reading data at ', input_path)
     with open(input_path, 'r') as f:
         for cnt, line in enumerate(f):
+            if cnt < rbegin:
+                continue
             line = line.replace(';', ',')
             line = line.rstrip(',\n')
             line = line.split(',')
             data.append(line)
             if rlimit and cnt == rlimit:
+                lbreak = True
                 break
-    return data[:plimit]
+    return data[:plimit], lbreak
 
 # Function to filter out events containing certain particles
 # Arguments:
@@ -132,86 +156,111 @@ def filter_jets(x):
 def main():
     # Resolve command line arguments
     args = args_parser()
-    input_path = args.rfile
+    input_path = args.rfile[0]
     save_path = args.wfile if args.wfile else format_save_path(input_path, args.setting)
     if (os.path.splitext(save_path)[1]):
         print('Invalid write file: write file must not include type extension')
         return
 
-    # Get data from a file
-    data = read_data(input_path, rlimit=200000)
+    rcontinue = True
+    fnumber = 1
+    rstep = 500000
+    rlimit = rstep
+    rbegin = 0
+
+    while rcontinue:
+        print('Begin batch {}'.format(fnumber))
+
+        # Get data from a file
+        print('Reading data')
+        data, rcontinue = read_data(input_path, rlimit=rlimit, rbegin=rbegin)
+        print('Read data done')
     
-    #Find the longest line in the data 
-    longest_line = max(data, key = len)
+        #Find the longest line in the data 
+        longest_line = max(data, key = len)
 
-    #Set the maximum number of columns
-    max_col_num = len(longest_line)
+        #Set the maximum number of columns
+        max_col_num = len(longest_line)
 
-    #Set the columns names
-    col_names = ['event_ID', 'process_ID', 'event_weight', 'MET', 'MET_Phi']
-    meta_cols = col_names.copy()
+        #Set the columns names
+        col_names = ['event_ID', 'process_ID', 'event_weight', 'MET', 'MET_Phi']
+        meta_cols = col_names.copy()
 
-    for i in range(1, (int((max_col_num-5)/5))+1):
-        col_names.append('obj'+str(i))
-        col_names.append('E'+str(i))
-        col_names.append('pt'+str(i))
-        col_names.append('eta'+str(i))
-        col_names.append('phi'+str(i))
+        for i in range(1, (int((max_col_num-5)/5))+1):
+            col_names.append('obj'+str(i))
+            col_names.append('E'+str(i))
+            col_names.append('pt'+str(i))
+            col_names.append('eta'+str(i))
+            col_names.append('phi'+str(i))
 
-    #Create a dataframe from the list, using the column names from before
-    print('Processing the data..')
-    df = pd.DataFrame(data, columns=col_names)
-    df.fillna(value=np.nan, inplace=True)
+        #Create a dataframe from the list, using the column names from before
+        print('Processing data')
+        df = pd.DataFrame(data, columns=col_names)
+        df.fillna(value=np.nan, inplace=True)
 
-    x_df = pd.DataFrame(df.values, columns=col_names)
-    x_df.fillna(value=0, inplace=True)
+        x_df = pd.DataFrame(df.values, columns=col_names)
+        x_df.fillna(value=0, inplace=True)
 
-    meta_df = x_df[meta_cols]
-    meta_df.to_pickle(save_path + '_metaData.pkl')
+        meta_df = x_df[meta_cols]
+        meta_df.to_pickle(save_path + '_metaData_{}.pkl'.format(fnumber))
 
-    x_df = x_df.drop(columns=meta_cols)
+        x_df = x_df.drop(columns=meta_cols)
 
-    if args.setting == 'jet_events':
-        # Filter out events containing non-jet particles
-        ignore_particles = ['e-', 'e+', 'm-', 'm+', 'g']
-        x_df = filter_non_jet_events(x_df, ignore_particles)
+        if args.setting == 'jet_events':
+            # Filter out events containing non-jet particles
+            ignore_particles = ['e-', 'e+', 'm-', 'm+', 'g']
+            x_df = filter_non_jet_events(x_df, ignore_particles)
 
-    x = x_df.values.reshape([x_df.shape[0]*x_df.shape[1]//5,5])
+        x = x_df.values.reshape([x_df.shape[0]*x_df.shape[1]//5,5])
 
-    lst = []
-    for i in range(x.shape[0]):
-        if (x[i] == 0).all():
-            lst.append(i)        
-    x1 = np.delete(x, lst, 0)
-    del x
+        lst = []
+        for i in range(x.shape[0]):
+            if (x[i] == 0).all():
+                lst.append(i)        
+        x1 = np.delete(x, lst, 0)
+        del x
 
-    if args.setting == 'jets' or args.setting == 'jet_events':
-        # Filter out non jet particles
-        data = filter_not_jets(x1)
-    elif args.setting == 'non_jets':
-        # Filter out jet particles
-        data = filter_jets(x1)
-    elif args.setting == 'light_jets':
-        # Filter out all particles but light jet ones
-        data = filter_not_light_jets(x1)
-    elif args.setting == 'b_jets':
-        # Filter out all particles but b-jet ones
-        data = filter_not_b_jets(x1)
-    else:
-        data = x1
+        if args.setting == 'jets' or args.setting == 'jet_events':
+            # Filter out non jet particles
+            data = filter_not_jets(x1)
+        elif args.setting == 'non_jets':
+            # Filter out jet particles
+            data = filter_jets(x1)
+        elif args.setting == 'light_jets':
+            # Filter out all particles but light jet ones
+            data = filter_not_light_jets(x1)
+        elif args.setting == 'b_jets':
+            # Filter out all particles but b-jet ones
+            data = filter_not_b_jets(x1)
+        else:
+            data = x1
 
-    print(len(data))
+        print('Process data done')
+        print('Number of particles: {}'.format(len(data)))
 
-    col_names = ['obj', 'E', 'pt', 'eta', 'phi']
+        col_names = ['obj', 'E', 'pt', 'eta', 'phi']
 
-    data_df = pd.DataFrame(data, columns=col_names)
-    data_df['obj'].to_pickle(save_path + '_meta_obj.pkl')
+        print('Creating data files')
 
-    data_df = data_df.drop(columns='obj')
+        data_df = pd.DataFrame(data, columns=col_names)
+        data_df['obj'].to_pickle(save_path + '_meta_obj_{}.pkl'.format(fnumber))
 
-    data_df = data_df.astype('float32')
+        data_df = data_df.drop(columns='obj')
 
-    data_df.to_pickle(save_path + '_4D.pkl')
+        data_df = data_df.astype('float32')
+
+        data_df.to_pickle(save_path + '_4D_{}.pkl'.format(fnumber))
+
+        print('Create data files done')
+
+        # Forward the reading and writing variables
+        fnumber = fnumber + 1
+        rbegin = rbegin + rstep + 1
+        rlimit = rlimit + rstep
+
+        # Reset variables
+        del data
+        del data_df
     
     return
 
