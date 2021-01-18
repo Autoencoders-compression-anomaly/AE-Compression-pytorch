@@ -3,6 +3,7 @@ import argparse
 import random
 import pandas as pd
 import numpy as np
+import pickle as pkl
 from sklearn.model_selection import train_test_split
 
 # Function for parsing command line arguments
@@ -32,7 +33,6 @@ def make_directory(directory):
 def format_save_path(input_path, setting):
     save_dir = os.path.dirname(input_path)
     input_filename, _ = os.path.splitext(os.path.basename(input_path))
-    inner_dirs = ['/data/', '/meta_data/', '/meta_obj/']
     if setting in ['all']:
         gname = 'processed_4D_{}_all_events_{}'.format(input_filename, setting)
     elif setting in ['jets', 'non_jets', 'light_jets', 'b_jets']:
@@ -41,9 +41,7 @@ def format_save_path(input_path, setting):
         gname = 'processed_4D_{}_{}_all'.format(input_filename, setting)
     sdir = '{}/{}/'.format(save_dir, gname)
     make_directory(sdir)
-    for d in inner_dirs:
-        make_directory('{}/{}/'.format(sdir, d))
-    return sdir+inner_dirs[0]+gname, sdir+inner_dirs[1]+gname, sdir+inner_dirs[2]+gname
+    return sdir+gname+'_meta_data.pkl', sdir+gname+'_meta_obj.pkl', sdir+gname+'_4D.pkl'
 
 # Function for reading data input
 # Arguments:
@@ -143,11 +141,11 @@ def main():
     # Resolve command line arguments
     args = args_parser()
     input_path = args.rfile[0]
-    save_data, save_meta_data, save_meta_obj = format_save_path(input_path, args.setting)
+    save_paths = format_save_path(input_path, args.setting)
 
     rcontinue = True
     fnumber = 1
-    rstep = 500000
+    rstep = 1000000
     rlimit = rstep
     rbegin = 0
 
@@ -185,7 +183,9 @@ def main():
         x_df.fillna(value=0, inplace=True)
 
         meta_df = x_df[meta_cols]
-        meta_df.to_pickle(save_meta_data + '_meta_data_{}.pkl'.format(fnumber))
+        with open(save_paths[0], 'ab') as f:
+            pkl.dump(meta_df, f)
+        # meta_df.to_pickle(save_path + '_meta_data_{}.pkl'.format(fnumber))
 
         x_df = x_df.drop(columns=meta_cols)
 
@@ -226,13 +226,17 @@ def main():
         print('Creating data files')
 
         data_df = pd.DataFrame(data, columns=col_names)
-        data_df['obj'].to_pickle(save_meta_obj + '_meta_obj_{}.pkl'.format(fnumber))
+        with open(save_paths[1], 'ab') as f:
+            pkl.dump(data_df['obj'], f)
+        # data_df['obj'].to_pickle(save_path + '_meta_obj_{}.pkl'.format(fnumber))
 
         data_df = data_df.drop(columns='obj')
 
         data_df = data_df.astype('float32')
 
-        data_df.to_pickle(save_data + '_4D_{}.pkl'.format(fnumber))
+        with open(save_paths[2], 'ab') as f:
+            pkl.dump(data_df, f)
+        # data_df.to_pickle(save_path + '_4D_{}.pkl'.format(fnumber))
 
         print('Create data files done')
 
