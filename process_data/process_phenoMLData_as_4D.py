@@ -15,8 +15,6 @@ def args_parser():
     parser.add_argument('-s', '--setting', nargs='?', default='all', const='all',
                         choices=['all', 'jets', 'non_jets', 'light_jets', 'b_jets', 'jet_events'],
                         help='choose a setting upon which to filter particles (default: %(default)s)')
-    parser.add_argument('-w', '--wfile', nargs='?',
-                         help='global path to processed file; must not include file type extension')
     return parser.parse_args()
 
 # Helper function to create directory if such does not exist
@@ -34,30 +32,18 @@ def make_directory(directory):
 def format_save_path(input_path, setting):
     save_dir = os.path.dirname(input_path)
     input_filename, _ = os.path.splitext(os.path.basename(input_path))
-    if setting == 'all':
-        sdir = '{}/processed_4D_{}_all_events_all_particles/'.format(save_dir, input_filename)
-        make_directory(sdir)
-        return sdir + 'processed_4D_{}_all_events_all_particles'.format(input_filename)
-    elif setting == 'jets':
-        sdir = '{}/processed_4D_{}_all_events_but_only_jet_particles/'.format(save_dir, input_filename)
-        make_directory(sdir)
-        return sdir + 'processed_4D_{}_all_events_but_only_jet_particles'.format(input_filename)
-    elif setting == 'non_jets':
-        sdir = '{}/processed_4D_{}_all_events_but_only_non_jet_particles/'.format(save_dir, input_filename)
-        make_directory(sdir)
-        return sdir + 'processed_4D_{}_all_events_but_only_non_jet_particles'.format(input_filename)
-    elif setting == 'light_jets':
-        sdir = '{}/processed_4D_{}_all_events_but_only_light_jet_particles/'.format(save_dir, input_filename)
-        make_directory(sdir)
-        return sdir + 'processed_4D_{}_all_events_but_only_light_jet_particles'.format(input_filename)
-    elif setting == 'b_jets':
-        sdir = '{}/processed_4D_{}_all_events_but_only_b_jet_particles/'.format(save_dir, input_filename)
-        make_directory(sdir)
-        return sdir + 'processed_4D_{}_all_events_but_only_b_jet_particles'.format(input_filename)
-    elif setting == 'jet_events':
-        sdir = '{}/processed_4D_{}_events_with_only_jet_particles/'.format(save_dir, input_filename)
-        make_directory(sdir)
-        return sdir + 'processed_4D_{}_events_with_only_jet_particles'.format(input_filename)
+    inner_dirs = ['/data/', '/meta_data/', '/meta_obj/']
+    if setting in ['all']:
+        gname = 'processed_4D_{}_all_events_{}'.format(input_filename, setting)
+    elif setting in ['jets', 'non_jets', 'light_jets', 'b_jets']:
+        gname = 'processed_4D_{}_all_events_only_{}'.format(input_filename, setting)
+    elif setting in ['jet_events']:
+        gname = 'processed_4D_{}_{}_all'.format(input_filename, setting)
+    sdir = '{}/{}/'.format(save_dir, gname)
+    make_directory(sdir)
+    for d in inner_dirs:
+        make_directory('{}/{}/'.format(sdir, d))
+    return sdir+inner_dirs[0]+gname, sdir+innerdirs[1]+gname, sdir+inner_dirs[2]+gname
 
 # Function for reading data input
 # Arguments:
@@ -157,10 +143,7 @@ def main():
     # Resolve command line arguments
     args = args_parser()
     input_path = args.rfile[0]
-    save_path = args.wfile if args.wfile else format_save_path(input_path, args.setting)
-    if (os.path.splitext(save_path)[1]):
-        print('Invalid write file: write file must not include type extension')
-        return
+    save_data, save_meta_data, save_meta_obj = format_save_path(input_path, args.setting)
 
     rcontinue = True
     fnumber = 1
@@ -202,7 +185,7 @@ def main():
         x_df.fillna(value=0, inplace=True)
 
         meta_df = x_df[meta_cols]
-        meta_df.to_pickle(save_path + '_metaData_{}.pkl'.format(fnumber))
+        meta_df.to_pickle(save_meta_data + '_meta_data_{}.pkl'.format(fnumber))
 
         x_df = x_df.drop(columns=meta_cols)
 
@@ -243,13 +226,13 @@ def main():
         print('Creating data files')
 
         data_df = pd.DataFrame(data, columns=col_names)
-        data_df['obj'].to_pickle(save_path + '_meta_obj_{}.pkl'.format(fnumber))
+        data_df['obj'].to_pickle(save_meta_obj + '_meta_obj_{}.pkl'.format(fnumber))
 
         data_df = data_df.drop(columns='obj')
 
         data_df = data_df.astype('float32')
 
-        data_df.to_pickle(save_path + '_4D_{}.pkl'.format(fnumber))
+        data_df.to_pickle(save_data + '_4D_{}.pkl'.format(fnumber))
 
         print('Create data files done')
 
