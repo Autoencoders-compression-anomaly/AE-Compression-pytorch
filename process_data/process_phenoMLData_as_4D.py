@@ -43,7 +43,7 @@ def format_save_path(input_path, setting):
     make_directory(sdir)
     for d in inner_dirs:
         make_directory('{}/{}/'.format(sdir, d))
-    return sdir+inner_dirs[0]+gname, sdir+innerdirs[1]+gname, sdir+inner_dirs[2]+gname
+    return sdir+inner_dirs[0]+gname, sdir+inner_dirs[1]+gname, sdir+inner_dirs[2]+gname
 
 # Function for reading data input
 # Arguments:
