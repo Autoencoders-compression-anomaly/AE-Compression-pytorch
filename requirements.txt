@@ -1,9 +1,8 @@
-numpy
-torch
-pandas
-matplotlib
-fastai
-corner
-uproot
-sklearn
-mplhep
+numpy==1.19.4
+torch==1.7.0
+pandas==1.1.4
+matplotlib==3.3.2
+fastai==2.1.5
+corner==2.1.0
+uproot==3.13.0
+h5py==3.1.0
