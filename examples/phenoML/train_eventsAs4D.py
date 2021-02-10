@@ -18,6 +18,7 @@ from fastai import learner
 from fastai.data import core
 from fastai.metrics import mse
 from fastai.callback import schedule
+from fastai.vision.data import DataLoader, DataLoaders
 from scipy import stats
 from pathlib import Path
 
@@ -223,7 +224,7 @@ def main():
         train_path, test_path = read_dataname_file(args.dfile[0])
     # Check that training and testing datasets are formatted correctly
     train_filename, train_extension = os.path.splitext(train_path)
-    _, test_extension = os.path.splitext(test_path)
+    test_filename, test_extension = os.path.splitext(test_path)
     if (train_extension not in ['.pkl', '.h5'] or test_extension not in ['.pkl', '.h5']):
         print('Invalid file type: Training and testing datasets must be either in pickle (.pkl) or in HDF5 (.h5) format.')
         return
@@ -233,9 +234,9 @@ def main():
         valid_split_path = train_filename + '_valid' + train_extension
 
     # Define variables
-    bs = 32 #8192
+    bs = 8192
     loss_func = nn.MSELoss()
-    one_epochs = 5
+    one_epochs = 20
     wd = 1e-2
     recorder = learner.Recorder()
 
@@ -250,7 +251,8 @@ def main():
         print('Events in Training Set: {}'.format(data.shape[0]))
     else:
         f = h5py.File(train_path, 'r')
-        data = f['data'][...]
+        #data = f['data'][...]
+        data = f['data'][0:5136741]
         print('Events in Training Set: {}'.format(data.shape[0]))
 
     # Get testing data from a file
@@ -264,6 +266,8 @@ def main():
 
     # Split into training and validation datasets
     train, valid = train_test_split(data, test_size=0.2, random_state=41)
+    train = train[0:200000]
+    valid = valid[0:40000]
 
     if train_extension == '.pkl':
         # Store split training and validation sets
@@ -286,6 +290,7 @@ def main():
             test = custom_normalise(test)
         else:
             norm = Normalize([1000.0, 1000.0, 5.0, 3.0])
+            test = custom_normalise(pd.DataFrame(data=test[0:5000], columns= ['E', 'pt', 'eta', 'phi']))
     elif (args.norm == 'std'):
         # Standard normalise training and testing datasets
         if train_extension == '.pkl':
@@ -336,14 +341,17 @@ def main():
     print('MSE on validation set is {}'.format(learn.validate()))
 
     # Make predictions
-    data = torch.tensor(test.values, dtype=torch.float)
+    if train_extension == '.pkl':
+        data = torch.tensor(train.values[0:1000], dtype=torch.float)
+    else:
+        data = torch.tensor(test.values, dtype=torch.float)
     predictions = model(data)
     data = data.detach().numpy()
     predictions = predictions.detach().numpy()
 
     # Plot results
-    plot(data, predictions, test.columns)
-    plot_residuals(data, predictions, test.columns)
+    plot(data, predictions, ['E', 'pt', 'eta', 'phi'])
+    plot_residuals(data, predictions, ['E', 'pt', 'eta', 'phi'])
     plot_MSE(data, predictions)
     mse = get_MSE(data, predictions)
     print('MSE1: {}; MSE2: {}'.format(mse[0], mse[1]))
