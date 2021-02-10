@@ -75,8 +75,8 @@ class Dataset(dt.Dataset):
         self.transform = transform
 
     def __getitem__(self, index):
-        sample = (torch.from_numpy(self.data[index,:]).float(), \
-                  torch.from_numpy(self.target[index,:]).float())
+        sample = (torch.from_numpy(self.data[index,:]), \
+                  torch.from_numpy(self.target[index,:]))
         if self.transform:
             sample = self.transform(sample)
         return sample
