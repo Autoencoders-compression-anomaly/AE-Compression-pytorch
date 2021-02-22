@@ -85,6 +85,17 @@ def custom_normalise(df):
     df['pt'] = np.log10(df['pt'])
     return df
 
+# Function to standard normalise dataset of 4-vectors
+# Arguments:
+#     df: pandas DataFrame with one particle per row, columns being the 4 features (E, pt, eta, phi)
+# Returns: DataFrame containing standard normalised dataset
+def std_normalise(df):
+    variables = df.keys()
+    x = df[variables].values
+    x_scaled = StandardScaler().fit_transform(x)
+    df[variables] = x_scaled
+    return df
+
 # Function to plot autoencoder performance
 # Arguments:
 #     data_in: input numpy array with values of the 4-vectors in initial order
@@ -170,7 +181,10 @@ def main():
     # Format testing data
     f = h5py.File(test_path, 'r')
     test = f['data'][...]
-    test = custom_normalise(pd.DataFrame(data=test[0:100000], columns= ['E', 'pt', 'eta', 'phi']))
+    if (args.norm == 'custom'):
+        test = custom_normalise(pd.DataFrame(data=test[0:100000], columns= ['E', 'pt', 'eta', 'phi']))
+    elif (args.norm == 'std'):
+        test = std_normalise(pd.DataFrame(data=test[0:100000], columns= ['E', 'pt', 'eta', 'phi']))
     data = torch.tensor(test.values, dtype=torch.float)
 
     # Make predictions
