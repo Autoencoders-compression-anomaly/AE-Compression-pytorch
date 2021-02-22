@@ -234,9 +234,9 @@ def main():
         valid_split_path = train_filename + '_valid' + train_extension
 
     # Define variables
-    bs = 8192
+    bs = 32 #8192
     loss_func = nn.MSELoss()
-    one_epochs = 20
+    one_epochs = 3
     wd = 1e-2
     recorder = learner.Recorder()
 
@@ -251,8 +251,7 @@ def main():
         print('Events in Training Set: {}'.format(data.shape[0]))
     else:
         f = h5py.File(train_path, 'r')
-        #data = f['data'][...]
-        data = f['data'][0:5136741]
+        data = f['data'][...]
         print('Events in Training Set: {}'.format(data.shape[0]))
 
     # Get testing data from a file
@@ -266,8 +265,6 @@ def main():
 
     # Split into training and validation datasets
     train, valid = train_test_split(data, test_size=0.2, random_state=41)
-    train = train[0:200000]
-    valid = valid[0:40000]
 
     if train_extension == '.pkl':
         # Store split training and validation sets
@@ -290,7 +287,7 @@ def main():
             test = custom_normalise(test)
         else:
             norm = Normalize([1000.0, 1000.0, 5.0, 3.0])
-            test = custom_normalise(pd.DataFrame(data=test[0:5000], columns= ['E', 'pt', 'eta', 'phi']))
+            test = custom_normalise(pd.DataFrame(data=test[0:100000], columns= ['E', 'pt', 'eta', 'phi']))
     elif (args.norm == 'std'):
         # Standard normalise training and testing datasets
         if train_extension == '.pkl':
@@ -307,11 +304,11 @@ def main():
         valid_ds = Dataset(valid_split_path, transform=norm)
 
     # Create DataLoaders
-    train_dl = dt.DataLoader(train_ds, batch_size=bs, shuffle=True)
-    valid_dl = dt.DataLoader(valid_ds, batch_size=bs * 2)
+    train_dl = DataLoader(train_ds, batch_size=bs, shuffle=True)
+    valid_dl = DataLoader(valid_ds, batch_size=bs * 2)
 
     # Return DataBunch
-    db = core.DataLoaders(train_dl, valid_dl)
+    db = DataLoaders(train_dl, valid_dl)
 
     # Model set-up
     model = AE_3D_200_LeakyReLU()
@@ -340,11 +337,11 @@ def main():
     # Get final validation loss
     print('MSE on validation set is {}'.format(learn.validate()))
 
+    # Save trained model
+    learn.save('AE_3D_200_LeakyReLU_ttbar')
+
     # Make predictions
-    if train_extension == '.pkl':
-        data = torch.tensor(train.values[0:1000], dtype=torch.float)
-    else:
-        data = torch.tensor(test.values, dtype=torch.float)
+    data = torch.tensor(test.values, dtype=torch.float)
     predictions = model(data)
     data = data.detach().numpy()
     predictions = predictions.detach().numpy()
