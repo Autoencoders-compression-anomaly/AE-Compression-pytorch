@@ -10,7 +10,7 @@ ML-compression of HEP data events using deep autoencoders with the PyTorch and f
 
 The repository is developed by Honey Gupta, as a part of the Google Summer of Code project, before which, it was built by Eric Wallin and Eric Wulff as a part of their bachelors' and master's project at Lund University. Technical explanations can be found in Eric Wulff's [thesis](https://lup.lub.lu.se/student-papers/search/publication/9004751). 
 
-A  summry of the experiments performed and the results obtained as a part of [Google Summer of Code 2020 Project](https://summerofcode.withgoogle.com/projects/#5677663735250944) can be found in this [report](). 
+A  summary of the experiments performed and the results obtained as a part of [Google Summer of Code 2020 Project](https://summerofcode.withgoogle.com/projects/#5677663735250944) can be found in this [report](). 
 
 ## Jump to:
 * [Setup](#setup)
