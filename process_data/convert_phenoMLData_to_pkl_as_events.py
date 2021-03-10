@@ -55,7 +55,7 @@ def read_data(input_path, rlimit=None, rbegin=0, plimit=None):
             if rlimit and cnt == rlimit:
                 lbreak = True
                 break
-    return data[:plimit], not lbreak
+    return data[:plimit], lbreak
 
 def main():
     args = args_parser()
@@ -95,18 +95,12 @@ def main():
         #Create a dataframe from the list, using the column names from before
         print('Processing the data..')
         df = pd.DataFrame(data, columns=col_names)
-        df.fillna(value=np.nan, inplace=True)
-
-        df = df.fillna(0)
-    
-        variables = [entry for entry in df.columns if entry[0] == 'E'] + [entry for entry in df.columns if entry[0:2] == 'pt'] + [entry for entry in df.columns if entry[0:2] == 'et'] + [entry for entry in df.columns if entry[0:2] == 'ph']
-
-        df = df[['process_ID']+variables]
-        one_hot = pd.get_dummies(df['process_ID'])
-        processes = one_hot.columns
-        df.drop('process_ID', axis = 'columns', inplace = True)
-        df = pd.concat([df, one_hot], sort = False, axis = 1)
-
+        df.fillna(value=0, inplace=True)
+        #df = df.fillna(0)
+        cols = [c for c in df.columns if (c[:3] != 'obj')]
+        cols = [c for c in cols if (c not in ['process_ID', 'event_ID', 'event_weight', 'MET', 'MET_Phi'])]
+        df = df[cols]
+        
         print('Creating data files at {}'.format(save_path))
 
         #Pickle the dataframe to keep it fresh
