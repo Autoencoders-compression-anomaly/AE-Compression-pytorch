@@ -50,11 +50,8 @@ A  summry of the experiments performed and the results obtained as a part of [Go
 2. #### Manual installation
     Create directory for your virtualenv
     ```
-    mkdir venv
-    cd venv
     python -m virtualenv -p python3 venv
-    source bin/activate
-    cd ..
+    source venv/bin/activate
     ```
 
     Now to install dependencies:
