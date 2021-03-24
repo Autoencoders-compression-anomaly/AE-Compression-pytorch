@@ -156,11 +156,21 @@ def std_normalise(df):
     df[variables] = x_scaled
     return df
 
-def combine_data(data):
-    p1 = data[:, 0:4]
-    p2 = data[:, 4:8]
-    data = np.concatenate((p1, p2), axis=0)
-    return data
+def combine_data(data, particles=4):
+    d = None
+    first = 0
+    step = 4
+    last = step
+    for p in range(particles):
+        particle = data[:, first:last]
+        if d is None:
+            d = particle
+        else:
+            d = np.concatenate((d, particle), axis=0)
+        first = first + step
+        last = last + step
+    
+    return d
 
 # Function to plot training data
 # Arguments:
@@ -173,7 +183,7 @@ def plot_training(data, col_names):
         plt.xlabel(str(col_names[col]))
         plt.yscale('Number')
         plt.yscale('log')
-        plt.savefig('plts/training_{}.png'.format(str(col_names[col])))
+        plt.savefig('plts_1/training_{}.png'.format(str(col_names[col])))
         plt.close()
 
 # Function to plot autoencoder performance
@@ -181,7 +191,7 @@ def plot_training(data, col_names):
 #     data_in: input numpy array with values of the 4-vectors in initial order
 #     data_out: output (decoded) numpy array with values of the 4-vectors in initial order
 #     col_names: indexable object with names of the 4 features in order same as data_in and data_out
-def plot(data_in, data_out, col_names):
+def plot(data_in, data_out, col_names, test='bckg'):
     for col in np.arange(4):
         plt.figure()
         plt.hist(data_in[:, col], label='Input', bins=200, alpha=1, histtype='step')
@@ -190,10 +200,10 @@ def plot(data_in, data_out, col_names):
         plt.ylabel('Number')
         plt.yscale('log')
         plt.legend()
-        plt.savefig('plts/comparison_{}.png'.format(str(col_names[col])))
+        plt.savefig(f'plts_1/comparison_{col_names[col]}_{test}.png')
         plt.close()
 
-def plot_residuals(data_in, data_out, col_names):
+def plot_residuals(data_in, data_out, col_names, test='bckg'):
     residual_strings = [r'$(m_{out} - m_{in}) / m_{in}$',
                         r'$(p_{T,out} - p_{T,in}) / p_{T,in}$',
                         r'$(\eta_{out} - \eta_{in}) / \eta_{in}$',
@@ -201,30 +211,64 @@ def plot_residuals(data_in, data_out, col_names):
     residuals = data_out - data_in
     residuals = np.divide(residuals, data_in)
     rang = (-0.1, 0.1)
+    fig, ax = plt.subplots(2,2)
     for col in np.arange(4):
-        plt.figure()
+        i = 0 if col<2 else 1
+        j = col%2
+        if col_names[col] == 'E':
+            title = 'Energy'
+        elif col_names[col] == 'pt':
+            title = 'Transverse Momentum'
+        elif col_names[col] == 'eta':
+            title = 'Pseudorapidity'
+        elif col_names[col] == 'phi':
+            title = 'Angle $\phi$'
         std = np.nanstd(residuals[:, col])
         std_err = np.nanstd(residuals[:, col], ddof=0) / np.sqrt(2 * len(residuals[:, col]))
         mean = np.nanmean(residuals[:, col])
         sem = stats.sem(residuals[:, col], nan_policy='omit')
-        plt.hist(residuals[:, col], alpha=0.8, bins=100, range=rang,
-                 label='Residuals \n Mean = {} $\pm$ {}\n $\sigma$ = {} $\pm$ {}'.format(mean, sem, std, std_err))
-        plt.title('Residuals of {}'.format(col_names[col]))
-        plt.xlabel(residual_strings[col])
-        plt.ylabel('Number')
-        plt.legend()
-        plt.savefig('plts/residual_{}.png'.format(col_names[col]))
-        plt.close()
+        ax[i][j].hist(residuals[:, col], alpha=0.8, bins=100, range=rang,
+                      label='Residuals \n Mean = {} $\pm$ {}\n $\sigma$ = {} $\pm$ {}'.format(mean, sem, std, std_err))
+        ax[i][j].set_title(title, fontsize=10)
+        ax[i][j].set_ylabel('Number of Particles', fontsize=8)
+        ax[i][j].ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+        ax[i][j].tick_params(axis='both', which='major', labelsize=8)
+        ax[i][j].table(cellText=[[f'{mean:.5f} $\pm$ {sem:.6f}', f'{std:.5f} $\pm$ {std_err:.6f}']],
+                       colLabels=['Mean, $\mu$', 'Standard Deviation, $\sigma$'],
+                       loc='bottom', colLoc='center',
+                       bbox=[0.001, -0.4, 1, 0.2])
+    if test == 'bckg':
+        suptitle = 'Residuals for Training-Like, Background Data Set'
+    else:
+        suptitle = 'Signal Residuals'
+    fig.suptitle(suptitle)
+    fig.tight_layout()
+    fig.savefig(f'plts_1/residual_{test}.png')
+    plt.close('all')
 
-def plot_MSE(data_in, data_out):
-    mse = np.sum(np.power(data_in - data_out, 2), axis=1) / 4
+def plot_MSE(bckg, signal, names):
+    tmp = signal.copy()
+    tmp.append(bckg)
+    bins = np.histogram(np.hstack(tmp), bins=100)[1]
     plt.figure()
-    plt.plot(mse)
-    plt.title('Testing MSE Loss')
-    #plt.xlabel()
-    #plt.ylabel()
-    plt.savefig('plts/testing_mse_loss.png')
+    for i in range(len(signal)):
+        plt.hist(signal[i], bins=bins, histtype='step', label=f'{names[i]}')
+    plt.hist(bckg, bins=bins, histtype='step', label='Background')
+    plt.title('Prediction MSE Loss')
+    plt.xlabel('MSE loss')
+    plt.ylabel('Number of Events')
+    plt.yscale('log')
+    plt.legend(prop={'size': 8})
+    plt.savefig(f'plts_1/mse.png')
     plt.close()
+
+    #plt.hist(bckg, bins=100, label='Background')
+    #plt.savefig('plts_1/mse_bckg.png')
+    #plt.close()
+
+    #plt.hist(signal, bins=100, label='Signal')
+    #plt.savefig('plts_1/mse_signal.png')
+    #plt.close()
 
 def get_MSE(data_in, data_out):
     l1 = np.sum(np.sum(np.power(data_in - data_out, 2), axis=1) / 4) / data_in.size
@@ -260,7 +304,7 @@ def main():
     # Define variables
     bs = 32 #8192
     loss_func = nn.MSELoss()
-    one_epochs = 5
+    one_epochs = 1
     wd = 1e-2
     recorder = learner.Recorder()
 
@@ -278,11 +322,10 @@ def main():
         data = f['data'][...]
     print('Events in Training Set: {}'.format(data.shape[0]))
 
-    take_cols = ['E1', 'E2', 'E3', 'E4', 'pt1', 'pt2', 'pt3', 'pt4', 'eta1', 'eta2', 'eta3', 'eta4', 'phi1', 'phi2', 'phi3', 'phi4']
+    take_cols = ['E1', 'pt1', 'eta1', 'phi1', 'E2', 'pt2', 'eta2', 'phi2', 'E3', 'pt3', 'eta3', 'phi3', 'E4', 'pt4', 'eta4', 'phi4']
 
     # Filter out to consider two first particles in each event
     data = data.loc[:, data.columns.isin(take_cols)]
-    #data = data.loc[:, data.columns.isin(['E1', 'pt1', 'phi1', 'eta1'])] 
 
     # Get testing data from a file
     if test_extension == '.pkl':
@@ -294,12 +337,15 @@ def main():
     print('Events in Testing Set: {}'.format(test.shape[0]))
 
     # Filter out to consider two first particles in each event
-    test = test.loc[:, test.columns.isin(take_cols)]
-    #test = test.loc[:, test.columns.isin(['E1', 'pt1', 'phi1', 'eta1'])]
+    test_signal = test.loc[:, test.columns.isin(take_cols)]
 
-    # Split into training and validation datasets
+    # Split into training and validation datasets 0.008
     train, test = train_test_split(data, test_size=0.2, random_state=41)
     train, valid = train_test_split(data, test_size=0.25, random_state=41)
+    print(f'Training size: {train.shape[0]}')
+    print(f'Valid size: {valid.shape[0]}')
+    print(f'Test background size: {test.shape[0]}')
+    print(f'Test signal size: {test_signal.shape[0]}')
 
     if train_extension == '.pkl':
         # Store split training and validation sets
@@ -317,6 +363,7 @@ def main():
             train = custom_normalise(train)
             valid = custom_normalise(valid)
             test = custom_normalise(test)
+            test_signal = custom_normalise(test_signal)
         else:
             norm = Normalize([1000.0, 1000.0, 5.0, 3.0])
             test = custom_normalise(pd.DataFrame(data=test[0:100000], columns= ['E', 'pt', 'eta', 'phi']))
@@ -326,6 +373,7 @@ def main():
             train = std_normalise(train)
             valid = std_normalise(valid)
             test = std_normalise(test)
+            test_signal = std_normalise(test_signal)
 
     if train_extension == '.pkl':
         # Create Tensor
@@ -350,7 +398,7 @@ def main():
     # Get learning rates at minimum and steepest decrease losses
     min_lr, steepest_lr = learn.lr_find()
     if loss_plot:
-        learn.recorder.plot_lr_find().savefig('plts/loss_optimisation.png')
+        learn.recorder.plot_lr_find().savefig('plts_1/loss_optimisation.png')
         plt.close('all')
     print('Minimum loss learning rate {}'.format(min_lr))
     print('Steepest loss drop learning rate {}'.format(steepest_lr))
@@ -363,7 +411,7 @@ def main():
     print('Training lasted for {} seconds'.format(time_tr))
 
     if loss_plot:
-        learn.recorder.plot_loss().savefig('plts/training_loss.png')
+        learn.recorder.plot_loss().savefig('plts_1/training_loss.png')
         plt.close('all')
 
     # Get final validation loss
@@ -372,21 +420,81 @@ def main():
     # Save trained model
     learn.save('AE_3D_200_LeakyReLU_small_file')
 
-    # Make predictions
+    # Make predictions on background test data
     data = torch.tensor(test.values, dtype=torch.float)
     predictions = model(data)
     data = data.detach().numpy()
     predictions = predictions.detach().numpy()
 
-    data = combine_data(data)
-    predictions = combine_data(predictions)
+    data_comb = combine_data(data)
+    predictions_comb = combine_data(predictions)
 
-    # Plot results
-    plot(data, predictions, ['E', 'pt', 'eta', 'phi'])
-    plot_residuals(data, predictions, ['E', 'pt', 'eta', 'phi'])
-    plot_MSE(data, predictions)
+    # Plot background testing results
+    plot(data[:,:4], predictions[:,:4], ['E', 'pt', 'eta', 'phi'])
+    plot_residuals(data_comb, predictions_comb, ['E', 'pt', 'eta', 'phi'])
     mse = get_MSE(data, predictions)
-    print('MSE1: {}; MSE2: {}'.format(mse[0], mse[1]))
+    print(f'MSE1: {mse[0]}; MSE2: {mse[1]}')
+    background_mse = np.sum(np.square(data - predictions), axis=1) / 16
+    print(background_mse.size)
+    print(background_mse)
+
+    # Make predictions on signal test data
+    # 1)
+    data_signal = torch.tensor(test_signal.values, dtype=torch.float)
+    predictions_signal = model(data_signal)
+    data_signal = data_signal.detach().numpy()
+    predictions_signal = predictions_signal.detach().numpy()
+
+    data_signal_comb = combine_data(data_signal)
+    predictions_signal_comb = combine_data(predictions_signal)
+
+    # Plot signal testing results
+    plot(data_signal[:,:4], predictions_signal[:,:4], ['E', 'pt', 'eta', 'phi'], test='signal')
+    plot_residuals(data_signal_comb, predictions_signal_comb, ['E', 'pt', 'eta', 'phi'], test='signal')
+    mse_signal = get_MSE(data_signal, predictions_signal)
+    print(f'MSE1: {mse_signal[0]}; MSE2: {mse_signal[1]}')
+    signal_mse = np.sum(np.square(data_signal - predictions_signal), axis=1) / 16
+    print(signal_mse.size)
+    print(signal_mse)
+
+    # 2)
+    smse, smse_names = list(), list()
+    smse.append(signal_mse)
+    smse_names.append('Z\' (200 GeV) + single (anti-top)')
+
+    test_reads = ['/nfs/atlas/mvaskev/small/training_files/chan1/processed_events_glgl1400_neutralino1100_chan1/processed_events_glgl1400_neutralino1100_chan1.pkl',
+                  '/nfs/atlas/mvaskev/small/training_files/chan1/processed_events_glgl1600_neutralino800_chan1/processed_events_glgl1600_neutralino800_chan1.pkl',
+                  '/nfs/atlas/mvaskev/small/training_files/chan1/processed_events_monojet_Zp2000.0_DM_50.0_chan1/processed_events_monojet_Zp2000.0_DM_50.0_chan1.pkl',
+                  '/nfs/atlas/mvaskev/small/training_files/chan1/processed_events_sqsq1_sq1400_neut800_chan1/processed_events_sqsq1_sq1400_neut800_chan1.pkl',
+                  '/nfs/atlas/mvaskev/small/training_files/chan1/processed_events_sqsq_sq1800_neut800_chan1/processed_events_sqsq_sq1800_neut800_chan1.pkl',
+                  '/nfs/atlas/mvaskev/small/training_files/chan1/processed_events_stlp_st1000_chan1/processed_events_stlp_st1000_chan1.pkl',
+                  '/nfs/atlas/mvaskev/small/training_files/chan1/processed_events_stop2b1000_neutralino300_chan1/processed_events_stop2b1000_neutralino300_chan1.pkl']
+    smse_names.append('SUSY gluino-gluino production (1.4 TeV gluino and 1.1 TeV neutralino)')
+    smse_names.append('SUSY gluino-gluino production (1.6 TeV gluino and 800 GeV neutralino)')
+    smse_names.append('Z\' (2 TeV) + monojet')
+    smse_names.append('SUSY R-parity violating squark-squark production')
+    smse_names.append('SUSY squark-squark production')
+    smse_names.append('SUSY R-parity violating stop stop (1 TeV) production')
+    smse_names.append('SUSY stop-stop (1 TeV) production')
+    for tp in test_reads:
+        test_2 = pd.read_pickle(tp)
+        test_2 = test_2.astype(float)
+        test_signal_2 = test_2.loc[:, test_2.columns.isin(take_cols)]
+        test_signal_2 = custom_normalise(test_signal_2)
+        data_signal_2 = torch.tensor(test_signal_2.values, dtype=torch.float)
+        predictions_signal_2 = model(data_signal_2)
+        data_signal_2 = data_signal_2.detach().numpy()
+        predictions_signal_2 = predictions_signal_2.detach().numpy()
+
+        # Plot signal testing results
+        mse_signal_2 = get_MSE(data_signal_2, predictions_signal_2)
+        print(f'MSE1: {mse_signal_2[0]}; MSE2: {mse_signal_2[1]}')
+        signal_mse_2 = np.sum(np.square(data_signal_2 - predictions_signal_2), axis=1) / 16
+        print(signal_mse_2.size)
+        print(signal_mse_2)
+        smse.append(signal_mse_2)
+
+    plot_MSE(background_mse, smse, smse_names)
 
 if __name__=='__main__':
     main()
