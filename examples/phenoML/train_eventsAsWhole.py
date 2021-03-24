@@ -426,12 +426,12 @@ def main():
     data = data.detach().numpy()
     predictions = predictions.detach().numpy()
 
-    data_comb = combine_data(data)
-    predictions_comb = combine_data(predictions)
+    #data_comb = combine_data(data)
+    #predictions_comb = combine_data(predictions)
 
     # Plot background testing results
-    plot(data[:,:4], predictions[:,:4], ['E', 'pt', 'eta', 'phi'])
-    plot_residuals(data_comb, predictions_comb, ['E', 'pt', 'eta', 'phi'])
+    plot(data[:,:4], predictions[:,:4], ['E1', 'E2', 'E3', 'E4'])
+    #plot_residuals(data_comb, predictions_comb, ['E', 'pt', 'eta', 'phi'])
     mse = get_MSE(data, predictions)
     print(f'MSE1: {mse[0]}; MSE2: {mse[1]}')
     background_mse = np.sum(np.square(data - predictions), axis=1) / 16
@@ -445,12 +445,12 @@ def main():
     data_signal = data_signal.detach().numpy()
     predictions_signal = predictions_signal.detach().numpy()
 
-    data_signal_comb = combine_data(data_signal)
-    predictions_signal_comb = combine_data(predictions_signal)
+    #data_signal_comb = combine_data(data_signal)
+    #predictions_signal_comb = combine_data(predictions_signal)
 
     # Plot signal testing results
-    plot(data_signal[:,:4], predictions_signal[:,:4], ['E', 'pt', 'eta', 'phi'], test='signal')
-    plot_residuals(data_signal_comb, predictions_signal_comb, ['E', 'pt', 'eta', 'phi'], test='signal')
+    plot(data_signal[:,:4], predictions_signal[:,:4], ['E1', 'E2', 'E3', 'E4'], test='signal')
+    #plot_residuals(data_signal_comb, predictions_signal_comb, ['E', 'pt', 'eta', 'phi'], test='signal')
     mse_signal = get_MSE(data_signal, predictions_signal)
     print(f'MSE1: {mse_signal[0]}; MSE2: {mse_signal[1]}')
     signal_mse = np.sum(np.square(data_signal - predictions_signal), axis=1) / 16
