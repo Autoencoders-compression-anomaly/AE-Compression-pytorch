@@ -1097,7 +1097,7 @@ class AE_2D_v1000(nn.Module):
 class AE_14D_reparam(nn.Module):
     def __init__(self, n_features=27):
         super(AE_14D_reparam, self).__init__()
-        self.en1 = nn.Linear(27, 27) #Reparameterization layer, currently fully connected
+        self.en1 = nn.Linear(27,27) #Reparameterization layer
         self.en2 = nn.Linear(27, 200)
         self.en3 = nn.Linear(200, 200)
         self.en4 = nn.Linear(200, 200)
@@ -1107,9 +1107,14 @@ class AE_14D_reparam(nn.Module):
         self.de3 = nn.Linear(200, 200)
         self.de4 = nn.Linear(200, 27)
         self.tanh = nn.Tanh()
+    
+        we1 = torch.eye(27) #Tensor for weighs of first layer, which will be zero except for diagonals, which are 
+        for i in range(27): #randomized between U(-1/sqrt(27), 1/sqrt(27))
+            we1[i][i] = np.random.uniform(-1/np.sqrt(27), 1/np.sqrt(27))
+        self.en1.weight.data = we1 #Zeroing off diagonal weights
 
     def encode(self, x):
-        return self.en5(self.tanh(self.en4(self.tanh(self.en3(self.tanh(self.en2(self.tanh(self.en1(self.tanh(x))))))))))
+        return self.en5(self.tanh(self.en4(self.tanh(self.en3(self.tanh(self.en2(self.tanh(self.en1(x)))))))))
 
     def decode(self, x):
         return self.de4(self.tanh(self.de3(self.tanh(self.de2(self.tanh(self.de1(self.tanh(x))))))))
@@ -1121,7 +1126,58 @@ class AE_14D_reparam(nn.Module):
     def describe(self):
         return 'in-in-200-200-200-14-200-200-200-out'
 
-    
+
+class AE_bn_LeakyReLU_14D_reparam(nn.Module):
+    def __init__(self, n_features=27):
+        super(AE_bn_LeakyReLU_14D_reparam, self).__init__()
+        self.en1 = nn.Linear(27,27, bias=False) #Reparameterization layer
+        self.en2 = nn.Linear(27, 200)
+        self.bn2 = nn.BatchNorm1d(200)
+        self.en3 = nn.Linear(200, 200)
+        self.bn3 = nn.BatchNorm1d(200)
+        self.en4 = nn.Linear(200, 200)
+        self.bn4 = nn.BatchNorm1d(200)
+        self.en5 = nn.Linear(200, 14)
+        self.bn5 = nn.BatchNorm1d(14)
+        self.de1 = nn.Linear(14, 200)
+        self.dn1 = nn.BatchNorm1d(200)
+        self.de2 = nn.Linear(200, 200)
+        self.dn2 = nn.BatchNorm1d(200)
+        self.de3 = nn.Linear(200, 200)
+        self.dn3 = nn.BatchNorm1d(200)
+        self.de4 = nn.Linear(200, 27)
+        self.relu = nn.LeakyReLU()
+
+        we1 = torch.eye(27) #Tensor for weighs of first layer, which will be zero except for diagonals, which are
+        for i in range(27): #randomized between U(-1/sqrt(27), 1/sqrt(27))
+            we1[i][i] = np.random.uniform(-1/np.sqrt(27), 1/np.sqrt(27))
+        self.en1.weight.data = we1 #Zeroing off diagonal weights
+
+    def encode(self, x):
+        for i in range(27):
+            for j in range(27):
+                if i != j:
+                    self.en1.weight.data[i][j] = 0
+
+        l1 = self.bn2(self.relu(self.en2(self.relu(self.en1(x)))))
+        l2 = self.bn3(self.relu(self.en3(l1)))
+        l3 = self.bn4(self.relu(self.en4(l2)))
+        return self.en5(l3)
+        
+    def decode(self, x):
+        l1 = self.bn5(self.relu(x))
+        l2 = self.dn1(self.relu(self.de1(l1)))
+        l3 = self.dn2(self.relu(self.de2(l2)))
+        l4 = self.dn3(self.relu(self.de3(l3)))
+        return self.de4(l4)
+       
+    def forward(self, x):
+        z = self.encode(x)
+        return self.decode(z)
+
+    def describe(self):
+        return 'in-in-200-200-200-14-200-200-200-out'
+
 # Some helper functions
 def get_data(train_ds, valid_ds, bs):
     return (
@@ -1182,4 +1238,3 @@ class RMSELoss(torch.nn.Module):
         criterion = nn.MSELoss()
         loss = torch.sqrt(criterion(x, y))
         return loss
-

@@ -15,7 +15,7 @@ modelDir="examples/27D/models/"
 pip3 install --no-cache-dir -r ${pathToAE}"requirements.txt"
 pip3 install $pathToAE
 
-outdir="dec7-100ep-reparam-noNorm" #Where all outputs are stored
+outdir="apr27-100ep-reparamNoTanhBiasBNRe-customNorm" #Where all outputs are stored
 savedir="/afs/cern.ch/user/s/sarobert/autoencoders/outputs/" #Where the output is moved to after completion
 eosdir="/eos/user/s/sarobert/"${outdir}"_plots/" #Where copy of plots are stored
 mkdir $outdir

@@ -668,6 +668,25 @@ def log_int_normalization(train, test, lower, upper): #Normalizing to a interval
 
     return train_cp, test_cp
 
+def min_norm(train, test):
+    train_cp = train.copy()
+    test_cp = test.copy()
+
+    for data in [train_cp, test_cp]:
+        data['NegativeE'] = np.log10(-data['NegativeE'] + 1) / negE_div
+        data['m'] = np.log10(data['m'] + m_add)
+        data['LeadingClusterCenterLambda'] = (np.log10(data['LeadingClusterCenterLambda'] + log_add) - log_sub)
+        data['LeadingClusterSecondLambda'] = (np.log10(data['LeadingClusterSecondLambda'] + log_add) - log_sub)
+        data['LeadingClusterSecondR'] = (np.log10(data['LeadingClusterSecondR'] + log_add) - log_sub)
+        data['AverageLArQF'] = (np.log10(data['AverageLArQF'] + log_add) - log_sub)
+        data['pt'] = np.log10(data['pt'])
+        data['LeadingClusterPt'] = np.log10(data['LeadingClusterPt'])
+        data['CentroidR'] = (np.log10(data['CentroidR']))
+        data['OotFracClusters10'] = np.log10(data['OotFracClusters10']+1)
+        data['OotFracClusters5'] = np.log10(data['OotFracClusters5'] + 1)
+
+    return train_cp, test_cp
+
 def round_to_input(pred, uniques, variable):
     var = pred[variable].values.reshape(-1, 1)
     diff = (var - uniques)

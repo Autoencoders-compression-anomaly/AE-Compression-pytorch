@@ -23,9 +23,9 @@ from fastai import basic_train, basic_data, torch_core
 from fastai.callbacks import ActivationStats
 from fastai import train as tr
 
-from HEPAutoencoders.nn_utils import AE_basic, AE_bn, AE_LeakyReLU, AE_bn_LeakyReLU, AE_big, AE_3D_50, AE_3D_50_bn_drop, AE_3D_50cone, AE_3D_100, AE_3D_100_bn_drop, AE_3D_100cone_bn_drop, AE_3D_200, AE_3D_200_bn_drop, AE_3D_500cone_bn, AE_3D_500cone_bn, AE_14D_reparam
+from HEPAutoencoders.nn_utils import AE_basic, AE_bn, AE_LeakyReLU, AE_bn_LeakyReLU, AE_big, AE_3D_50, AE_3D_50_bn_drop, AE_3D_50cone, AE_3D_100, AE_3D_100_bn_drop, AE_3D_100cone_bn_drop, AE_3D_200, AE_3D_200_bn_drop, AE_3D_500cone_bn, AE_3D_500cone_bn, AE_14D_reparam, AE_bn_LeakyReLU_14D_reparam
 from HEPAutoencoders.nn_utils import get_data, RMSELoss
-from HEPAutoencoders.utils import min_filter_jets, filter_jets, plot_activations, custom_normalization, normalize, custom_unnormalize, interval_normalization, log_int_normalization 
+from HEPAutoencoders.utils import min_filter_jets, filter_jets, plot_activations, custom_normalization, normalize, custom_unnormalize, interval_normalization, log_int_normalization, min_norm 
 import HEPAutoencoders.utils as utils
 import matplotlib as mpl
 import seaborn as sns
@@ -56,10 +56,11 @@ test = filter_jets(test)
 #train = min_filter_jets(train)
 #test = min_filter_jets(test)
 
-#train, test = custom_normalization(train, test)
+train, test = custom_normalization(train, test)
 #train, test = normalize(train, test)
 #train, test = interval_normalization(train, test, 0, 1)
 #train, test = log_int_normalization(train, test, 0, 1)
+#train, test = min_norm(train, test)
 
 train_mean = train.mean()
 train_std = train.std()
@@ -198,7 +199,7 @@ one_epochs = 100
 one_lr = 1e-2
 one_wd = 1e-2
 one_pp = None
-one_module = AE_14D_reparam
+one_module = AE_bn_LeakyReLU_14D_reparam
 continue_training = False
 checkpoint_name = 'nn_utils_bs1024_lr1e-04_wd1e-02_ppNA' # Want to format string like: % (bs, one_lr, one_wd)
 
@@ -214,6 +215,7 @@ def one_run(module, epochs, lr, wd, pp, ct):
         print('Training %s with lr=%.1e, p=None, wd=%.1e ...' % (module_string, lr, wd))
         curr_model = module([27, 27, 200, 200, 200, 14, 200, 200, 200, 27])
         train_and_save(curr_model, epochs, lr, wd, pp, module_string, save_dict, ct, checkpoint_name)
+        print(curr_model.en1.weight)
         print('...done')
 
 tic = time.time()
