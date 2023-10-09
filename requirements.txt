@@ -1,6 +1,5 @@
 numpy
 torch
-pandas
 matplotlib
 fastai
 corner
