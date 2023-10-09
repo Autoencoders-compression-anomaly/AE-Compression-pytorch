@@ -5,5 +5,5 @@ matplotlib
 fastai
 corner
 uproot
-sklearn
+scikit-learn
 mplhep
