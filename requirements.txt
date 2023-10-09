@@ -4,5 +4,6 @@ matplotlib
 fastai
 corner
 uproot
+awkward-pandas
 scikit-learn
 mplhep
